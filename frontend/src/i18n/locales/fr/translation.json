@@ -1,0 +1,516 @@
+{
+  "common": {
+    "loading": "Chargement...",
+    "error": "Erreur",
+    "success": "Succès",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "view": "Voir",
+    "close": "Fermer",
+    "submit": "Soumettre",
+    "back": "Retour",
+    "next": "Suivant",
+    "search": "Rechercher",
+    "filter": "Filtrer",
+    "all": "Tous",
+    "none": "Aucun",
+    "yes": "Oui",
+    "no": "Non",
+    "or": "ou",
+    "and": "et",
+    "required": "Requis",
+    "optional": "Optionnel",
+    "learnMore": "En savoir plus",
+    "viewAll": "Voir tout",
+    "readMore": "Lire la suite",
+    "seeMore": "Voir plus",
+    "showLess": "Voir moins",
+    "download": "Télécharger",
+    "upload": "Téléverser"
+  },
+  "nav": {
+    "home": "Accueil",
+    "about": "À propos",
+    "programs": "Programmes",
+    "schedule": "Horaires",
+    "pricing": "Tarifs",
+    "locations": "Emplacements",
+    "branches": "Nos Branches",
+    "disciplines": "Disciplines",
+    "contact": "Contact",
+    "faq": "FAQ",
+    "join": "Rejoindre",
+    "login": "Connexion",
+    "logout": "Déconnexion",
+    "myAccount": "Mon Compte",
+    "dashboard": "Tableau de bord",
+    "memberLogin": "Espace membre",
+    "getStarted": "Commencer"
+  },
+  "header": {
+    "tagline": "Transformez votre vie par les arts martiaux",
+    "callToAction": "Commencez votre parcours",
+    "languageSelector": "Langue"
+  },
+  "footer": {
+    "about": "À propos de nous",
+    "aboutText": "Spartans Arts Martiaux & Fitness est dédié à transformer des vies grâce à l'entraînement aux arts martiaux, aux programmes de fitness et au développement personnel.",
+    "quickLinks": "Liens Rapides",
+    "contactUs": "Contactez-nous",
+    "followUs": "Suivez-nous",
+    "address": "Adresse",
+    "phone": "Téléphone",
+    "email": "Email",
+    "copyright": "© {{year}} Spartans Arts Martiaux & Fitness. Propulsé par <a href='https://www.mc1services.com/' target='_blank' rel='noopener noreferrer' class='text-red-500 hover:text-red-400 transition-colors'>MCS Consultancy</a>.",
+    "privacyPolicy": "Politique de confidentialité",
+    "termsOfService": "Conditions d'utilisation",
+    "newsletter": "Newsletter",
+    "subscribeText": "Abonnez-vous pour recevoir nos actualités",
+    "subscribePlaceholder": "Entrez votre email",
+    "subscribeButton": "S'abonner"
+  },
+  "home": {
+    "hero": {
+      "title": "Libérez le guerrier en vous",
+      "subtitle": "Transformez votre corps et votre esprit grâce à un entraînement d'arts martiaux de classe mondiale",
+      "cta": "Commencez l'entraînement aujourd'hui",
+      "secondaryCta": "Voir les programmes"
+    },
+    "features": {
+      "title": "Pourquoi choisir Spartans?",
+      "subtitle": "Découvrez la différence chez Spartans Arts Martiaux & Fitness",
+      "expertInstructors": {
+        "title": "Instructeurs experts",
+        "description": "Apprenez avec des professionnels certifiés ayant des années d'expérience en arts martiaux et fitness"
+      },
+      "modernFacilities": {
+        "title": "Installations modernes",
+        "description": "Entraînez-vous dans des installations à la pointe de la technologie équipées des derniers équipements"
+      },
+      "flexibleSchedule": {
+        "title": "Horaires flexibles",
+        "description": "Choisissez parmi plusieurs horaires de cours qui s'adaptent à votre vie active"
+      },
+      "allLevels": {
+        "title": "Tous les niveaux",
+        "description": "Programmes conçus pour les débutants jusqu'aux pratiquants avancés"
+      }
+    },
+    "stats": {
+      "locations": "Sites",
+      "disciplines": "Disciplines",
+      "expertCoaches": "Coachs experts",
+      "programs": "Programmes"
+    },
+    "disciplines": {
+      "title": "Nos Disciplines",
+      "subtitle": "Maîtrisez votre art avec un entraînement de classe mondiale",
+      "viewAll": "Voir toutes les disciplines"
+    },
+    "whyTrain": {
+      "title": "Pourquoi s'entraîner avec <1>Spartans</1>",
+      "expertCoaches": {
+        "title": "Coachs experts",
+        "description": "Apprenez avec des instructeurs certifiés ayant des années d'expérience compétitive et pédagogique."
+      },
+      "supportiveCommunity": {
+        "title": "Communauté solidaire",
+        "description": "Rejoignez une famille de guerriers qui se motivent mutuellement chaque jour."
+      },
+      "multipleLocations": {
+        "title": "Plusieurs sites",
+        "description": "Entraînez-vous dans nos installations modernes à travers les EAU."
+      }
+    },
+    "locations": {
+      "title": "Nos Sites",
+      "subtitle": "Trouvez une salle près de chez vous",
+      "viewAll": "Voir tous les sites"
+    },
+    "programs": {
+      "title": "Nos Programmes",
+      "subtitle": "Programmes d'entraînement complets pour tous les âges et niveaux",
+      "viewAll": "Voir tous les programmes"
+    },
+    "testimonials": {
+      "title": "Ce que disent nos membres",
+      "subtitle": "Écoutez notre communauté de guerriers"
+    },
+    "cta": {
+      "title": "Prêt à commencer votre parcours?",
+      "subtitle": "Rejoignez des milliers de guerriers qui ont transformé leur vie grâce aux arts martiaux et au fitness.",
+      "button": "Commencer maintenant",
+      "freeTrial": "Essai gratuit",
+      "viewPricing": "Voir les tarifs"
+    }
+  },
+  "about": {
+    "title": "À propos de Spartans",
+    "subtitle": "Notre histoire, mission et valeurs",
+    "mission": {
+      "title": "Notre Mission",
+      "text": "Responsabiliser les individus de tous âges par l'entraînement aux arts martiaux, favorisant la forme physique, la discipline mentale et la croissance personnelle."
+    },
+    "vision": {
+      "title": "Notre Vision",
+      "text": "Être l'académie d'arts martiaux de référence dans la région, reconnue pour l'excellence de la formation et l'impact positif sur la communauté."
+    },
+    "values": {
+      "title": "Nos Valeurs",
+      "discipline": "Discipline",
+      "respect": "Respect",
+      "excellence": "Excellence",
+      "community": "Communauté",
+      "integrity": "Intégrité"
+    },
+    "history": {
+      "title": "Notre Histoire",
+      "text": "Fondé avec une passion pour les arts martiaux, Spartans est passé d'une petite salle d'entraînement à un centre de fitness complet servant des milliers de membres sur plusieurs sites."
+    },
+    "team": {
+      "title": "Notre Équipe",
+      "subtitle": "Rencontrez nos instructeurs experts et notre personnel"
+    }
+  },
+  "programs": {
+    "title": "Nos Programmes",
+    "subtitle": "Trouvez le programme d'entraînement parfait pour vous",
+    "allPrograms": "Tous les programmes",
+    "forKids": "Pour enfants",
+    "forAdults": "Pour adultes",
+    "forAll": "Pour tous les âges",
+    "level": "Niveau",
+    "duration": "Durée",
+    "schedule": "Horaire",
+    "instructor": "Instructeur",
+    "enrollNow": "S'inscrire",
+    "learnMore": "En savoir plus",
+    "beginner": "Débutant",
+    "intermediate": "Intermédiaire",
+    "advanced": "Avancé",
+    "allLevels": "Tous niveaux"
+  },
+  "schedule": {
+    "title": "Horaire des cours",
+    "subtitle": "Trouvez le moment parfait pour votre entraînement",
+    "monday": "Lundi",
+    "tuesday": "Mardi",
+    "wednesday": "Mercredi",
+    "thursday": "Jeudi",
+    "friday": "Vendredi",
+    "saturday": "Samedi",
+    "sunday": "Dimanche",
+    "noClasses": "Aucun cours prévu",
+    "selectLocation": "Sélectionner l'emplacement",
+    "allLocations": "Tous les emplacements",
+    "bookClass": "Réserver le cours",
+    "spotsAvailable": "{{count}} places disponibles",
+    "classFull": "Cours complet"
+  },
+  "pricing": {
+    "title": "Plans d'abonnement",
+    "subtitle": "Choisissez le plan qui correspond à vos objectifs. Tous les abonnements incluent l'accès aux installations et coachs de classe mondiale.",
+    "monthly": "Mensuel",
+    "quarterly": "Trimestriel",
+    "yearly": "Annuel",
+    "perMonth": "/mois",
+    "perQuarter": "/trimestre",
+    "perYear": "/an",
+    "mostPopular": "Plus populaire",
+    "bestValue": "Meilleure valeur",
+    "features": "Caractéristiques",
+    "selectPlan": "Choisir ce plan",
+    "getStarted": "Commencer",
+    "contactUs": "Contactez-nous",
+    "customPlan": "Besoin d'un plan personnalisé?",
+    "customPlanText": "Contactez-nous pour des forfaits entreprise et solutions sur mesure",
+    "includes": "Inclut",
+    "noCommitment": "Sans engagement",
+    "cancelAnytime": "Annulation à tout moment",
+    "popular": "POPULAIRE",
+    "empty": {
+      "title": "Aucun plan disponible",
+      "subtitle": "Contactez-nous pour des informations sur les abonnements."
+    },
+    "faqCta": {
+      "title": "Des questions sur nos plans?",
+      "subtitle": "Consultez notre FAQ ou contactez-nous pour des conseils personnalisés.",
+      "viewFaqs": "Voir la FAQ"
+    }
+  },
+  "locations": {
+    "title": "Nos Emplacements",
+    "subtitle": "Trouvez un centre Spartans près de chez vous",
+    "viewOnMap": "Voir sur la carte",
+    "getDirections": "Obtenir l'itinéraire",
+    "hours": "Horaires",
+    "facilities": "Installations",
+    "contactBranch": "Contacter cette branche",
+    "openNow": "Ouvert",
+    "closed": "Fermé",
+    "seeSchedule": "Voir l'horaire"
+  },
+  "branches": {
+    "title": "Nos Sites",
+    "subtitle": "Trouvez une salle Spartans près de chez vous. Nos installations sont équipées du meilleur matériel et de coachs experts.",
+    "empty": {
+      "title": "Aucun site disponible",
+      "subtitle": "Revenez bientôt pour nos emplacements."
+    },
+    "contactLocation": "Contacter ce site",
+    "cantFind": {
+      "title": "Pas de site près de chez vous?",
+      "subtitle": "Nous nous développons! Contactez-nous pour exprimer votre intérêt pour un nouveau site.",
+      "cta": "Nous contacter"
+    }
+  },
+  "disciplines": {
+    "title": "Nos Disciplines",
+    "subtitle": "Découvrez un large éventail d'arts martiaux et de programmes fitness pour tous niveaux.",
+    "empty": {
+      "title": "Aucune discipline disponible",
+      "subtitle": "Revenez bientôt pour nos programmes."
+    },
+    "benefits": "Avantages",
+    "suitableFor": "Adapté pour",
+    "readyToTrain": {
+      "title": "Prêt à vous entraîner?",
+      "subtitle": "Réservez un cours d'essai gratuit et découvrez {{name}} avec nos coachs experts.",
+      "cta": "Essai gratuit"
+    },
+    "backToAll": "Retour aux disciplines",
+    "notSure": {
+      "title": "Pas sûr de la discipline qui vous convient?",
+      "subtitle": "Réservez une consultation avec nos coachs. Nous vous aiderons à trouver le programme idéal.",
+      "cta": "Réserver une consultation"
+    }
+  },
+  "contact": {
+    "title": "Contactez-nous",
+    "subtitle": "Nous serions ravis de vous entendre",
+    "hero": {
+      "subtitle": "Des questions? Envie d'un cours d'essai? Nous serions ravis de vous aider."
+    },
+    "form": {
+      "title": "Envoyez-nous un message",
+      "name": "Nom complet",
+      "namePlaceholder": "Votre nom",
+      "email": "Adresse email",
+      "emailPlaceholder": "your@email.com",
+      "phone": "Numéro de téléphone",
+      "phonePlaceholder": "+971-50-000-0000",
+      "subject": "Sujet",
+      "subjectPlaceholder": "Sélectionnez un sujet",
+      "message": "Message",
+      "messagePlaceholder": "Comment pouvons-nous vous aider?",
+      "submit": "Envoyer le message",
+      "sending": "Envoi en cours...",
+      "success": "Message envoyé avec succès! Nous vous répondrons bientôt.",
+      "error": "Échec de l'envoi. Veuillez réessayer.",
+      "preferredLocation": "Site préféré",
+      "selectLocation": "Sélectionnez un site"
+    },
+    "subjects": {
+      "freeTrial": "Réserver un essai gratuit",
+      "membership": "Renseignement abonnement",
+      "classSchedule": "Question sur les horaires",
+      "corporate": "Formation entreprise",
+      "other": "Autre"
+    },
+    "info": {
+      "title": "Nous contacter",
+      "visitUs": "Visitez-nous",
+      "callUs": "Appelez-nous",
+      "emailUs": "Écrivez-nous",
+      "businessHours": "Heures d'ouverture",
+      "weekdays": "Lundi - Vendredi",
+      "weekends": "Samedi - Dimanche"
+    },
+    "success": {
+      "title": "Message envoyé!",
+      "message": "Merci de nous avoir contactés. Nous vous répondrons sous 24 heures.",
+      "sendAnother": "Envoyer un autre message"
+    },
+    "sidebar": {
+      "getInTouch": "Nous contacter",
+      "email": "Email",
+      "phone": "Téléphone",
+      "ourLocations": "Nos sites",
+      "viewAll": "Voir tous les sites →"
+    }
+  },
+  "faq": {
+    "title": "Questions Fréquentes",
+    "subtitle": "Réponses aux questions courantes sur nos programmes, abonnements et installations.",
+    "searchPlaceholder": "Rechercher une question...",
+    "noResults": "Aucune question ne correspond à votre recherche",
+    "stillHaveQuestions": "Vous avez d'autres questions?",
+    "contactSupport": "Contactez notre support",
+    "empty": {
+      "title": "Aucune FAQ disponible",
+      "subtitle": "Revenez bientôt ou contactez-nous directement."
+    },
+    "contactCta": {
+      "title": "Vous avez d'autres questions?",
+      "subtitle": "Notre équipe est là pour vous aider. Contactez-nous et nous vous répondrons sous 24 heures.",
+      "button": "Nous contacter"
+    }
+  },
+  "join": {
+    "title": "Rejoindre Spartans",
+    "subtitle": "Commencez votre parcours en arts martiaux aujourd'hui",
+    "steps": {
+      "personal": "Infos personnelles",
+      "medical": "Infos médicales",
+      "membership": "Choisir le plan",
+      "agreement": "Accord",
+      "payment": "Paiement"
+    },
+    "personal": {
+      "title": "Informations personnelles",
+      "fullName": "Nom complet",
+      "email": "Email",
+      "phone": "Téléphone",
+      "gender": "Genre",
+      "genderMale": "Homme",
+      "genderFemale": "Femme",
+      "genderOther": "Autre",
+      "dob": "Date de naissance",
+      "address": "Adresse",
+      "emergencyContact": "Contact d'urgence",
+      "emergencyName": "Nom du contact",
+      "emergencyPhone": "Téléphone du contact",
+      "emergencyRelation": "Relation"
+    },
+    "medical": {
+      "title": "Informations médicales",
+      "conditions": "Conditions médicales",
+      "injuries": "Blessures antérieures",
+      "allergies": "Allergies",
+      "medications": "Médicaments actuels",
+      "consent": "J'accepte de partager ces informations médicales pour des raisons de sécurité",
+      "consentRequired": "Le consentement est requis pour continuer"
+    },
+    "membership": {
+      "title": "Choisissez votre plan",
+      "fullAccess": "Accès complet",
+      "fullAccessDesc": "Accès à tous les programmes",
+      "dedicatedProgram": "Salle uniquement",
+      "dedicatedProgramDesc": "Accès à la salle uniquement",
+      "selectProgram": "Sélectionner le programme",
+      "startDate": "Date de début",
+      "autoRenew": "Renouvellement automatique"
+    },
+    "agreement": {
+      "title": "Accord d'adhésion",
+      "readAndAgree": "J'ai lu et j'accepte les termes et conditions",
+      "signature": "Signature",
+      "signHere": "Signez ici"
+    },
+    "payment": {
+      "title": "Paiement",
+      "selectMethod": "Méthode de paiement",
+      "cash": "Espèces",
+      "cashDesc": "Payer sur place",
+      "online": "Carte bancaire",
+      "onlineDesc": "Paiement en ligne sécurisé",
+      "tabby": "Tabby",
+      "tabbyDesc": "Payer en 4 fois",
+      "tamara": "Tamara",
+      "tamaraDesc": "Payer en 3 fois",
+      "totalAmount": "Montant total",
+      "complete": "Finaliser l'inscription"
+    },
+    "success": {
+      "title": "Bienvenue chez Spartans!",
+      "message": "Votre inscription est terminée. Consultez votre email pour vos identifiants.",
+      "loginButton": "Se connecter"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Connexion",
+      "subtitle": "Bon retour, guerrier",
+      "email": "Email",
+      "emailPlaceholder": "Entrez votre email",
+      "password": "Mot de passe",
+      "passwordPlaceholder": "Entrez votre mot de passe",
+      "rememberMe": "Se souvenir de moi",
+      "forgotPassword": "Mot de passe oublié?",
+      "submit": "Se connecter",
+      "noAccount": "Pas de compte?",
+      "signUp": "S'inscrire",
+      "orContinueWith": "Ou continuer avec",
+      "google": "Continuer avec Google"
+    },
+    "register": {
+      "title": "Créer un compte",
+      "subtitle": "Commencez votre parcours avec nous",
+      "name": "Nom complet",
+      "namePlaceholder": "Entrez votre nom complet",
+      "email": "Email",
+      "emailPlaceholder": "Entrez votre email",
+      "password": "Mot de passe",
+      "passwordPlaceholder": "Créez un mot de passe",
+      "confirmPassword": "Confirmer le mot de passe",
+      "confirmPasswordPlaceholder": "Confirmez votre mot de passe",
+      "terms": "J'accepte les Conditions d'utilisation et la Politique de confidentialité",
+      "submit": "Créer le compte",
+      "hasAccount": "Déjà un compte?",
+      "signIn": "Se connecter"
+    },
+    "errors": {
+      "invalidCredentials": "Email ou mot de passe invalide",
+      "emailRequired": "L'email est requis",
+      "passwordRequired": "Le mot de passe est requis",
+      "passwordMismatch": "Les mots de passe ne correspondent pas",
+      "weakPassword": "Le mot de passe doit contenir au moins 6 caractères",
+      "emailInUse": "Cet email est déjà utilisé",
+      "networkError": "Erreur réseau. Veuillez réessayer."
+    }
+  },
+  "validation": {
+    "required": "Ce champ est requis",
+    "email": "Veuillez entrer un email valide",
+    "phone": "Veuillez entrer un numéro valide",
+    "minLength": "Doit contenir au moins {{min}} caractères",
+    "maxLength": "Doit contenir au maximum {{max}} caractères",
+    "passwordMatch": "Les mots de passe doivent correspondre",
+    "invalidDate": "Veuillez entrer une date valide",
+    "selectOption": "Veuillez sélectionner une option"
+  },
+  "errors": {
+    "pageNotFound": "Page non trouvée",
+    "pageNotFoundText": "La page que vous cherchez n'existe pas",
+    "serverError": "Erreur serveur",
+    "serverErrorText": "Une erreur s'est produite. Veuillez réessayer plus tard.",
+    "unauthorized": "Non autorisé",
+    "unauthorizedText": "Vous n'avez pas la permission d'accéder à cette page",
+    "goHome": "Retour à l'accueil",
+    "tryAgain": "Réessayer"
+  },
+  "meta": {
+    "home": {
+      "title": "Spartans Arts Martiaux & Fitness | Transformez votre vie",
+      "description": "Rejoignez Spartans pour un entraînement d'arts martiaux de classe mondiale. Programmes pour tous âges et niveaux. Commencez aujourd'hui!"
+    },
+    "about": {
+      "title": "À propos | Spartans Arts Martiaux & Fitness",
+      "description": "Découvrez la mission, les valeurs et l'engagement de Spartans à transformer des vies par les arts martiaux."
+    },
+    "programs": {
+      "title": "Programmes | Spartans Arts Martiaux & Fitness",
+      "description": "Explorez nos programmes complets d'arts martiaux et fitness pour enfants, ados et adultes."
+    },
+    "pricing": {
+      "title": "Tarifs & Plans | Spartans Arts Martiaux & Fitness",
+      "description": "Plans d'abonnement flexibles pour tous les budgets. Options mensuelles, trimestrielles et annuelles."
+    },
+    "contact": {
+      "title": "Contact | Spartans Arts Martiaux & Fitness",
+      "description": "Contactez Spartans. Nous sommes là pour répondre à vos questions et vous aider à démarrer."
+    }
+  }
+}

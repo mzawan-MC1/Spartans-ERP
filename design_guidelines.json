@@ -1,0 +1,120 @@
+{
+  "brand_identity": {
+    "name": "Spartans Martial Arts & Fitness",
+    "mission": "Forging disciplined warriors through elite training facilities.",
+    "aesthetic": "Tactical Minimalism. Bold. Aggressive. High Contrast.",
+    "theme_mode": "dark",
+    "emotional_tone": "Powerful, Disciplined, Exclusive, Energetic"
+  },
+  "typography": {
+    "headings": {
+      "family": "Barlow Condensed, sans-serif",
+      "weights": ["600", "700", "800"],
+      "usage": "All headings (h1-h4), navigation items, buttons, stat numbers.",
+      "import_url": "https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Manrope:wght@400;500;600&display=swap"
+    },
+    "body": {
+      "family": "Manrope, sans-serif",
+      "weights": ["400", "500", "600"],
+      "usage": "Paragraphs, labels, input text, table data."
+    }
+  },
+  "colors": {
+    "background": {
+      "default": "#09090b",
+      "card": "#18181b",
+      "overlay": "rgba(9, 9, 11, 0.8)"
+    },
+    "primary": {
+      "main": "#E53935",
+      "hover": "#D32F2F",
+      "foreground": "#FFFFFF"
+    },
+    "neutral": {
+      "border": "#27272a",
+      "muted": "#71717a",
+      "text_primary": "#FFFFFF",
+      "text_secondary": "#a1a1aa"
+    },
+    "status": {
+      "success": "#10B981",
+      "warning": "#F59E0B",
+      "error": "#EF4444"
+    }
+  },
+  "visual_enhancers": {
+    "borders": "1px solid #27272a",
+    "radius": "rounded-sm",
+    "shadows": "shadow-none",
+    "textures": {
+      "noise": "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E\")"
+    },
+    "effects": {
+      "glass": "backdrop-blur-md bg-black/40 border-b border-white/10"
+    }
+  },
+  "layout_strategies": {
+    "dashboard_grid": "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6",
+    "form_container": "max-w-2xl mx-auto bg-zinc-900/50 p-8 border border-zinc-800",
+    "page_wrapper": "min-h-screen bg-background text-foreground flex flex-col font-body selection:bg-red-600 selection:text-white"
+  },
+  "components": {
+    "buttons": {
+      "primary": "bg-red-600 hover:bg-red-700 text-white font-heading font-bold uppercase tracking-wider px-6 py-2 rounded-sm transition-all duration-200 active:scale-95",
+      "outline": "bg-transparent border border-zinc-700 text-zinc-300 hover:border-red-600 hover:text-white font-heading uppercase tracking-wide px-6 py-2 rounded-sm transition-all duration-200",
+      "ghost": "text-zinc-400 hover:text-white hover:bg-zinc-800/50 font-heading uppercase tracking-wide px-4 py-2 rounded-sm"
+    },
+    "cards": {
+      "location_card": "group relative overflow-hidden bg-zinc-900 border border-zinc-800 hover:border-red-600/50 transition-colors duration-300 rounded-sm flex flex-col",
+      "stat_card": "bg-zinc-900/50 border border-zinc-800 p-6 flex flex-col justify-between hover:bg-zinc-900 transition-colors"
+    },
+    "inputs": {
+      "base": "bg-zinc-950 border border-zinc-800 focus:border-red-600 focus:ring-1 focus:ring-red-600 rounded-sm text-white placeholder:text-zinc-600 h-10 px-3 transition-colors"
+    },
+    "navigation": {
+      "top_bar": "sticky top-0 z-50 w-full border-b border-zinc-800 bg-black/80 backdrop-blur-xl h-16 flex items-center px-6 justify-between",
+      "location_switcher": "w-[200px] bg-zinc-900 border-zinc-800 text-white hover:bg-zinc-800"
+    }
+  },
+  "image_urls": {
+    "locations": [
+      {
+        "url": "https://images.unsplash.com/photo-1592051610978-672b8b817647?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzNTl8MHwxfHNlYXJjaHwxfHxtYXJ0aWFsJTIwYXJ0cyUyMGd5bSUyMGludGVyaW9yJTIwZGFyayUyMG1vb2R5fGVufDB8fHx8MTc3MDgzNzgyOXww&ixlib=rb-4.1.0&q=85",
+        "category": "location_hero",
+        "description": "Sharjah Branch - Main Dojo Floor"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1711825051467-fda9d8abea58?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NjZ8MHwxfHNlYXJjaHwyfHxib3hpbmclMjByaW5nJTIwZGFyayUyMG1vb2R5fGVufDB8fHx8MTc3MDgzNzgyOXww&ixlib=rb-4.1.0&q=85",
+        "category": "location_hero",
+        "description": "Dubai Branch - Boxing Zone"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1632174400121-02726ed4dc7c?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NjZ8MHwxfHNlYXJjaHwxfHxib3hpbmclMjByaW5nJTIwZGFyayUyMG1vb2R5fGVufDB8fHx8MTc3MDgzNzgyOXww&ixlib=rb-4.1.0&q=85",
+        "category": "location_hero",
+        "description": "Al Ain Branch - Training Area"
+      }
+    ],
+    "branding": {
+      "logo_placeholder": "https://placehold.co/400x100/000000/E53935?text=SPARTANS&font=oswald"
+    }
+  },
+  "instructions_to_main_agent": [
+    "1. PRE-REQUISITE: Update 'tailwind.config.js' first to extend the theme with the 'colors' and 'fontFamily' defined above. Add 'Barlow Condensed' as 'font-heading' and 'Manrope' as 'font-body'.",
+    "2. THEME ENFORCEMENT: Hardcode 'dark' class in the html or body tag. This app is dark mode ONLY.",
+    "3. COMPONENT OVERRIDES: When using Shadcn components, ALWAYS override the default rounded-md/lg with 'rounded-sm' or 'rounded-none' to match the sharp aesthetic.",
+    "4. NO GRADIENTS: Do not use gradient backgrounds for buttons or cards. Use solid colors or subtle borders.",
+    "5. AUTH PAGE: The login page should split screen: Left side pure black with login form, Right side one of the location images with a red duotone overlay.",
+    "6. DASHBOARD LAYOUT: Use the 'Bento Grid' strategy. The Location List should be the main focus. Each card needs a clear 'Status' indicator (Active/Inactive).",
+    "7. MICRO-INTERACTIONS: Add 'hover:scale-[1.01]' to location cards. It should feel tactile.",
+    "8. FORBIDDEN: Do not use purple, teal, or blue as primary colors. Only Red (#E53935) and monochromatic grays.",
+    "9. ICONS: Use 'lucide-react' but style them with 'stroke-width=1.5' for a thinner, more precise look.",
+    "10. TESTING: Add data-testid to all interactive elements (buttons, inputs, cards) using kebab-case (e.g., 'login-submit-btn', 'location-card-dubai')."
+  ],
+  "universal_guidelines": [
+    "Don't make generic centered layouts.",
+    "Use glass-morphism effects with backdrop filters (12-24px blur) for sticky headers.",
+    "Use 2-3x more spacing than feels comfortable.",
+    "Every interaction needs micro-animations.",
+    "Main agent relies on these image URLs. Missing categories = main agent will use placeholder text which is FORBIDDEN"
+  ]
+}

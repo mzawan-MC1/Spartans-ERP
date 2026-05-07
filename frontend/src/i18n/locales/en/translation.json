@@ -1,0 +1,516 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "view": "View",
+    "close": "Close",
+    "submit": "Submit",
+    "back": "Back",
+    "next": "Next",
+    "search": "Search",
+    "filter": "Filter",
+    "all": "All",
+    "none": "None",
+    "yes": "Yes",
+    "no": "No",
+    "or": "or",
+    "and": "and",
+    "required": "Required",
+    "optional": "Optional",
+    "learnMore": "Learn More",
+    "viewAll": "View All",
+    "readMore": "Read More",
+    "seeMore": "See More",
+    "showLess": "Show Less",
+    "download": "Download",
+    "upload": "Upload"
+  },
+  "nav": {
+    "home": "Home",
+    "about": "About",
+    "programs": "Programs",
+    "schedule": "Schedule",
+    "pricing": "Pricing",
+    "locations": "Locations",
+    "branches": "Our Branches",
+    "disciplines": "Disciplines",
+    "contact": "Contact",
+    "faq": "FAQ",
+    "join": "Join Now",
+    "login": "Sign In",
+    "logout": "Sign Out",
+    "myAccount": "My Account",
+    "dashboard": "Dashboard",
+    "memberLogin": "Member Login",
+    "getStarted": "Get Started"
+  },
+  "header": {
+    "tagline": "Transform Your Life Through Martial Arts",
+    "callToAction": "Start Your Journey",
+    "languageSelector": "Language"
+  },
+  "footer": {
+    "about": "About Us",
+    "aboutText": "Spartans Martial Arts & Fitness is dedicated to transforming lives through martial arts training, fitness programs, and character development.",
+    "quickLinks": "Quick Links",
+    "contactUs": "Contact Us",
+    "followUs": "Follow Us",
+    "address": "Address",
+    "phone": "Phone",
+    "email": "Email",
+    "copyright": "© {{year}} Spartans Martial Arts & Fitness. Powered by <a href='https://www.mc1services.com/' target='_blank' rel='noopener noreferrer' class='text-red-500 hover:text-red-400 transition-colors'>MCS Consultancy</a>.",
+    "privacyPolicy": "Privacy Policy",
+    "termsOfService": "Terms of Service",
+    "newsletter": "Newsletter",
+    "subscribeText": "Subscribe to our newsletter for updates",
+    "subscribePlaceholder": "Enter your email",
+    "subscribeButton": "Subscribe"
+  },
+  "home": {
+    "hero": {
+      "title": "Unleash Your Inner Warrior",
+      "subtitle": "Transform your body and mind through world-class martial arts training",
+      "cta": "Start Training Today",
+      "secondaryCta": "View Programs"
+    },
+    "features": {
+      "title": "Why Choose Spartans?",
+      "subtitle": "Discover the difference at Spartans Martial Arts & Fitness",
+      "expertInstructors": {
+        "title": "Expert Instructors",
+        "description": "Learn from certified professionals with years of experience in martial arts and fitness"
+      },
+      "modernFacilities": {
+        "title": "Modern Facilities",
+        "description": "Train in state-of-the-art facilities equipped with the latest equipment"
+      },
+      "flexibleSchedule": {
+        "title": "Flexible Schedule",
+        "description": "Choose from multiple class times that fit your busy lifestyle"
+      },
+      "allLevels": {
+        "title": "All Skill Levels",
+        "description": "Programs designed for beginners to advanced practitioners"
+      }
+    },
+    "stats": {
+      "locations": "Locations",
+      "disciplines": "Disciplines",
+      "expertCoaches": "Expert Coaches",
+      "programs": "Programs"
+    },
+    "disciplines": {
+      "title": "Our Disciplines",
+      "subtitle": "Master your craft with world-class training",
+      "viewAll": "View All Disciplines"
+    },
+    "whyTrain": {
+      "title": "Why Train With <1>Spartans</1>",
+      "expertCoaches": {
+        "title": "Expert Coaches",
+        "description": "Learn from certified instructors with years of competitive and teaching experience."
+      },
+      "supportiveCommunity": {
+        "title": "Supportive Community",
+        "description": "Join a family of warriors who motivate and push each other to be better every day."
+      },
+      "multipleLocations": {
+        "title": "Multiple Locations",
+        "description": "Train at any of our state-of-the-art facilities across the UAE."
+      }
+    },
+    "locations": {
+      "title": "Our Locations",
+      "subtitle": "Find a gym near you",
+      "viewAll": "View All Locations"
+    },
+    "programs": {
+      "title": "Our Programs",
+      "subtitle": "Comprehensive training programs for all ages and skill levels",
+      "viewAll": "View All Programs"
+    },
+    "testimonials": {
+      "title": "What Our Members Say",
+      "subtitle": "Hear from our community of warriors"
+    },
+    "cta": {
+      "title": "Ready to Start Your Journey?",
+      "subtitle": "Join thousands of warriors who have transformed their lives through martial arts and fitness training.",
+      "button": "Get Started Now",
+      "freeTrial": "Book a Free Trial",
+      "viewPricing": "View Pricing"
+    }
+  },
+  "about": {
+    "title": "About Spartans",
+    "subtitle": "Our Story, Mission & Values",
+    "mission": {
+      "title": "Our Mission",
+      "text": "To empower individuals of all ages through martial arts training, fostering physical fitness, mental discipline, and personal growth."
+    },
+    "vision": {
+      "title": "Our Vision",
+      "text": "To be the leading martial arts academy in the region, known for excellence in training and positive community impact."
+    },
+    "values": {
+      "title": "Our Values",
+      "discipline": "Discipline",
+      "respect": "Respect",
+      "excellence": "Excellence",
+      "community": "Community",
+      "integrity": "Integrity"
+    },
+    "history": {
+      "title": "Our History",
+      "text": "Founded with a passion for martial arts, Spartans has grown from a small training facility to a comprehensive fitness center serving thousands of members across multiple locations."
+    },
+    "team": {
+      "title": "Our Team",
+      "subtitle": "Meet our expert instructors and staff"
+    }
+  },
+  "programs": {
+    "title": "Our Programs",
+    "subtitle": "Find the perfect training program for you",
+    "allPrograms": "All Programs",
+    "forKids": "For Kids",
+    "forAdults": "For Adults",
+    "forAll": "For All Ages",
+    "level": "Level",
+    "duration": "Duration",
+    "schedule": "Schedule",
+    "instructor": "Instructor",
+    "enrollNow": "Enroll Now",
+    "learnMore": "Learn More",
+    "beginner": "Beginner",
+    "intermediate": "Intermediate",
+    "advanced": "Advanced",
+    "allLevels": "All Levels"
+  },
+  "schedule": {
+    "title": "Class Schedule",
+    "subtitle": "Find the perfect time for your training",
+    "monday": "Monday",
+    "tuesday": "Tuesday",
+    "wednesday": "Wednesday",
+    "thursday": "Thursday",
+    "friday": "Friday",
+    "saturday": "Saturday",
+    "sunday": "Sunday",
+    "noClasses": "No classes scheduled",
+    "selectLocation": "Select Location",
+    "allLocations": "All Locations",
+    "bookClass": "Book Class",
+    "spotsAvailable": "{{count}} spots available",
+    "classFull": "Class Full"
+  },
+  "pricing": {
+    "title": "Membership Plans",
+    "subtitle": "Choose the plan that fits your training goals. All memberships include access to world-class facilities and expert coaching.",
+    "monthly": "Monthly",
+    "quarterly": "Quarterly",
+    "yearly": "Yearly",
+    "perMonth": "/month",
+    "perQuarter": "/quarter",
+    "perYear": "/year",
+    "mostPopular": "Most Popular",
+    "bestValue": "Best Value",
+    "features": "Features",
+    "selectPlan": "Select Plan",
+    "getStarted": "Get Started",
+    "contactUs": "Contact Us",
+    "customPlan": "Need a custom plan?",
+    "customPlanText": "Contact us for corporate packages and custom solutions",
+    "includes": "Includes",
+    "noCommitment": "No commitment required",
+    "cancelAnytime": "Cancel anytime",
+    "popular": "POPULAR",
+    "empty": {
+      "title": "No Pricing Plans Available",
+      "subtitle": "Contact us for membership information."
+    },
+    "faqCta": {
+      "title": "Have Questions About Our Plans?",
+      "subtitle": "Check our FAQ or contact us for personalized advice on choosing the right membership.",
+      "viewFaqs": "View FAQs"
+    }
+  },
+  "locations": {
+    "title": "Our Locations",
+    "subtitle": "Find a Spartans facility near you",
+    "viewOnMap": "View on Map",
+    "getDirections": "Get Directions",
+    "hours": "Hours",
+    "facilities": "Facilities",
+    "contactBranch": "Contact This Branch",
+    "openNow": "Open Now",
+    "closed": "Closed",
+    "seeSchedule": "See Schedule"
+  },
+  "branches": {
+    "title": "Our Locations",
+    "subtitle": "Find a Spartans gym near you. All our facilities feature state-of-the-art equipment and expert coaching.",
+    "empty": {
+      "title": "No Locations Available",
+      "subtitle": "Check back soon for our gym locations."
+    },
+    "contactLocation": "Contact This Location",
+    "cantFind": {
+      "title": "Can't Find a Location Near You?",
+      "subtitle": "We're expanding! Contact us to express interest in a new location.",
+      "cta": "Get in Touch"
+    }
+  },
+  "disciplines": {
+    "title": "Our Disciplines",
+    "subtitle": "Discover a wide range of martial arts and fitness programs designed for all skill levels. Find your path to becoming a warrior.",
+    "empty": {
+      "title": "No Disciplines Available",
+      "subtitle": "Check back soon for our training programs."
+    },
+    "benefits": "Benefits",
+    "suitableFor": "Suitable For",
+    "readyToTrain": {
+      "title": "Ready to Train?",
+      "subtitle": "Book a free trial class and experience {{name}} with our expert coaches.",
+      "cta": "Book Free Trial"
+    },
+    "backToAll": "Back to All Disciplines",
+    "notSure": {
+      "title": "Not Sure Which Discipline is Right for You?",
+      "subtitle": "Book a consultation with our coaches. We'll help you find the perfect program based on your goals and fitness level.",
+      "cta": "Book a Consultation"
+    }
+  },
+  "contact": {
+    "title": "Contact Us",
+    "subtitle": "We'd love to hear from you",
+    "hero": {
+      "subtitle": "Have questions? Want to book a trial class? We'd love to hear from you."
+    },
+    "form": {
+      "title": "Send Us a Message",
+      "name": "Full Name",
+      "namePlaceholder": "Your name",
+      "email": "Email Address",
+      "emailPlaceholder": "your@email.com",
+      "phone": "Phone Number",
+      "phonePlaceholder": "+971-50-000-0000",
+      "subject": "Subject",
+      "subjectPlaceholder": "Select a subject",
+      "message": "Message",
+      "messagePlaceholder": "How can we help you?",
+      "submit": "Send Message",
+      "sending": "Sending...",
+      "success": "Message sent successfully! We'll get back to you soon.",
+      "error": "Failed to send message. Please try again.",
+      "preferredLocation": "Preferred Location",
+      "selectLocation": "Select a location"
+    },
+    "subjects": {
+      "freeTrial": "Book a Free Trial",
+      "membership": "Membership Inquiry",
+      "classSchedule": "Class Schedule Question",
+      "corporate": "Corporate Training",
+      "other": "Other"
+    },
+    "info": {
+      "title": "Get in Touch",
+      "visitUs": "Visit Us",
+      "callUs": "Call Us",
+      "emailUs": "Email Us",
+      "businessHours": "Business Hours",
+      "weekdays": "Monday - Friday",
+      "weekends": "Saturday - Sunday"
+    },
+    "success": {
+      "title": "Message Sent!",
+      "message": "Thank you for contacting us. We'll get back to you within 24 hours.",
+      "sendAnother": "Send Another Message"
+    },
+    "sidebar": {
+      "getInTouch": "Get in Touch",
+      "email": "Email",
+      "phone": "Phone",
+      "ourLocations": "Our Locations",
+      "viewAll": "View All Locations →"
+    }
+  },
+  "faq": {
+    "title": "Frequently Asked Questions",
+    "subtitle": "Find answers to common questions about our programs, memberships, and facilities.",
+    "searchPlaceholder": "Search questions...",
+    "noResults": "No questions found matching your search",
+    "stillHaveQuestions": "Still have questions?",
+    "contactSupport": "Contact our support team",
+    "empty": {
+      "title": "No FAQs Available",
+      "subtitle": "Check back soon or contact us directly."
+    },
+    "contactCta": {
+      "title": "Still Have Questions?",
+      "subtitle": "Our team is here to help. Reach out and we'll get back to you within 24 hours.",
+      "button": "Contact Us"
+    }
+  },
+  "join": {
+    "title": "Join Spartans",
+    "subtitle": "Start your martial arts journey today",
+    "steps": {
+      "personal": "Personal Info",
+      "medical": "Medical Info",
+      "membership": "Select Plan",
+      "agreement": "Agreement",
+      "payment": "Payment"
+    },
+    "personal": {
+      "title": "Personal Information",
+      "fullName": "Full Name",
+      "email": "Email",
+      "phone": "Phone",
+      "gender": "Gender",
+      "genderMale": "Male",
+      "genderFemale": "Female",
+      "genderOther": "Other",
+      "dob": "Date of Birth",
+      "address": "Address",
+      "emergencyContact": "Emergency Contact",
+      "emergencyName": "Contact Name",
+      "emergencyPhone": "Contact Phone",
+      "emergencyRelation": "Relationship"
+    },
+    "medical": {
+      "title": "Medical Information",
+      "conditions": "Medical Conditions",
+      "injuries": "Previous Injuries",
+      "allergies": "Allergies",
+      "medications": "Current Medications",
+      "consent": "I consent to share this medical information for safety purposes",
+      "consentRequired": "Consent is required to proceed"
+    },
+    "membership": {
+      "title": "Select Your Plan",
+      "fullAccess": "Full Access",
+      "fullAccessDesc": "Access to all programs",
+      "dedicatedProgram": "Only Gym",
+      "dedicatedProgramDesc": "Gym access only",
+      "selectProgram": "Select Program",
+      "startDate": "Start Date",
+      "autoRenew": "Auto-renew membership"
+    },
+    "agreement": {
+      "title": "Membership Agreement",
+      "readAndAgree": "I have read and agree to the terms and conditions",
+      "signature": "Signature",
+      "signHere": "Sign here"
+    },
+    "payment": {
+      "title": "Payment",
+      "selectMethod": "Select Payment Method",
+      "cash": "Cash",
+      "cashDesc": "Pay at the facility",
+      "online": "Credit/Debit Card",
+      "onlineDesc": "Pay online securely",
+      "tabby": "Tabby",
+      "tabbyDesc": "Pay in 4 installments",
+      "tamara": "Tamara",
+      "tamaraDesc": "Pay in 3 installments",
+      "totalAmount": "Total Amount",
+      "complete": "Complete Registration"
+    },
+    "success": {
+      "title": "Welcome to Spartans!",
+      "message": "Your registration is complete. Check your email for login credentials.",
+      "loginButton": "Go to Login"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Sign In",
+      "subtitle": "Welcome back, warrior",
+      "email": "Email",
+      "emailPlaceholder": "Enter your email",
+      "password": "Password",
+      "passwordPlaceholder": "Enter your password",
+      "rememberMe": "Remember me",
+      "forgotPassword": "Forgot password?",
+      "submit": "Sign In",
+      "noAccount": "Don't have an account?",
+      "signUp": "Sign Up",
+      "orContinueWith": "Or continue with",
+      "google": "Continue with Google"
+    },
+    "register": {
+      "title": "Create Account",
+      "subtitle": "Start your journey with us",
+      "name": "Full Name",
+      "namePlaceholder": "Enter your full name",
+      "email": "Email",
+      "emailPlaceholder": "Enter your email",
+      "password": "Password",
+      "passwordPlaceholder": "Create a password",
+      "confirmPassword": "Confirm Password",
+      "confirmPasswordPlaceholder": "Confirm your password",
+      "terms": "I agree to the Terms of Service and Privacy Policy",
+      "submit": "Create Account",
+      "hasAccount": "Already have an account?",
+      "signIn": "Sign In"
+    },
+    "errors": {
+      "invalidCredentials": "Invalid email or password",
+      "emailRequired": "Email is required",
+      "passwordRequired": "Password is required",
+      "passwordMismatch": "Passwords do not match",
+      "weakPassword": "Password must be at least 6 characters",
+      "emailInUse": "Email is already in use",
+      "networkError": "Network error. Please try again."
+    }
+  },
+  "validation": {
+    "required": "This field is required",
+    "email": "Please enter a valid email",
+    "phone": "Please enter a valid phone number",
+    "minLength": "Must be at least {{min}} characters",
+    "maxLength": "Must be at most {{max}} characters",
+    "passwordMatch": "Passwords must match",
+    "invalidDate": "Please enter a valid date",
+    "selectOption": "Please select an option"
+  },
+  "errors": {
+    "pageNotFound": "Page Not Found",
+    "pageNotFoundText": "The page you're looking for doesn't exist",
+    "serverError": "Server Error",
+    "serverErrorText": "Something went wrong. Please try again later.",
+    "unauthorized": "Unauthorized",
+    "unauthorizedText": "You don't have permission to access this page",
+    "goHome": "Go Home",
+    "tryAgain": "Try Again"
+  },
+  "meta": {
+    "home": {
+      "title": "Spartans Martial Arts & Fitness | Transform Your Life",
+      "description": "Join Spartans for world-class martial arts training. Programs for all ages and skill levels. Start your journey today!"
+    },
+    "about": {
+      "title": "About Us | Spartans Martial Arts & Fitness",
+      "description": "Learn about Spartans' mission, values, and our commitment to transforming lives through martial arts."
+    },
+    "programs": {
+      "title": "Programs | Spartans Martial Arts & Fitness",
+      "description": "Explore our comprehensive martial arts and fitness programs for kids, teens, and adults."
+    },
+    "pricing": {
+      "title": "Pricing & Plans | Spartans Martial Arts & Fitness",
+      "description": "Flexible membership plans to fit your budget. Monthly, quarterly, and yearly options available."
+    },
+    "contact": {
+      "title": "Contact Us | Spartans Martial Arts & Fitness",
+      "description": "Get in touch with Spartans. We're here to answer your questions and help you start your journey."
+    }
+  }
+}

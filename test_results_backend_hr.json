@@ -1,0 +1,210 @@
+{
+  "summary": {
+    "tests_run": 20,
+    "tests_passed": 20,
+    "success_rate": 100.0
+  },
+  "test_results": [
+    {
+      "test_name": "Manager Login",
+      "method": "POST",
+      "endpoint": "auth/login",
+      "expected_status": 200,
+      "actual_status": 200,
+      "success": true,
+      "details": "",
+      "timestamp": "2026-02-11T21:11:21.498421"
+    },
+    {
+      "test_name": "Owner Login",
+      "method": "POST",
+      "endpoint": "auth/login",
+      "expected_status": 200,
+      "actual_status": 200,
+      "success": true,
+      "details": "",
+      "timestamp": "2026-02-11T21:11:21.759436"
+    },
+    {
+      "test_name": "List Staff",
+      "method": "GET",
+      "endpoint": "staff",
+      "expected_status": 200,
+      "actual_status": 200,
+      "success": true,
+      "details": "",
+      "timestamp": "2026-02-11T21:11:21.794798"
+    },
+    {
+      "test_name": "Create Staff",
+      "method": "POST",
+      "endpoint": "staff",
+      "expected_status": 201,
+      "actual_status": 201,
+      "success": true,
+      "details": "",
+      "timestamp": "2026-02-11T21:11:21.829972"
+    },
+    {
+      "test_name": "Update Staff",
+      "method": "PATCH",
+      "endpoint": "staff/staff_ebcae760e908",
+      "expected_status": 200,
+      "actual_status": 200,
+      "success": true,
+      "details": "",
+      "timestamp": "2026-02-11T21:11:21.869397"
+    },
+    {
+      "test_name": "Deactivate Staff",
+      "method": "PATCH",
+      "endpoint": "staff/staff_ebcae760e908/deactivate",
+      "expected_status": 200,
+      "actual_status": 200,
+      "success": true,
+      "details": "",
+      "timestamp": "2026-02-11T21:11:21.909917"
+    },
+    {
+      "test_name": "List Staff for Payroll",
+      "method": "GET",
+      "endpoint": "staff",
+      "expected_status": 200,
+      "actual_status": 200,
+      "success": true,
+      "details": "",
+      "timestamp": "2026-02-11T21:11:21.949482"
+    },
+    {
+      "test_name": "List Payroll Records",
+      "method": "GET",
+      "endpoint": "payroll",
+      "expected_status": 200,
+      "actual_status": 200,
+      "success": true,
+      "details": "",
+      "timestamp": "2026-02-11T21:11:21.985730"
+    },
+    {
+      "test_name": "Create Payroll Record",
+      "method": "POST",
+      "endpoint": "payroll",
+      "expected_status": 201,
+      "actual_status": 201,
+      "success": true,
+      "details": "",
+      "timestamp": "2026-02-11T21:11:22.024860"
+    },
+    {
+      "test_name": "Approve Payroll",
+      "method": "PATCH",
+      "endpoint": "payroll/pay_eaa062dbb8ab/status",
+      "expected_status": 200,
+      "actual_status": 200,
+      "success": true,
+      "details": "",
+      "timestamp": "2026-02-11T21:11:22.064529"
+    },
+    {
+      "test_name": "Mark Payroll as Paid",
+      "method": "PATCH",
+      "endpoint": "payroll/pay_eaa062dbb8ab/status",
+      "expected_status": 200,
+      "actual_status": 200,
+      "success": true,
+      "details": "",
+      "timestamp": "2026-02-11T21:11:22.099773"
+    },
+    {
+      "test_name": "List Expenses",
+      "method": "GET",
+      "endpoint": "expenses",
+      "expected_status": 200,
+      "actual_status": 200,
+      "success": true,
+      "details": "",
+      "timestamp": "2026-02-11T21:11:22.138011"
+    },
+    {
+      "test_name": "Create Expense",
+      "method": "POST",
+      "endpoint": "expenses",
+      "expected_status": 201,
+      "actual_status": 201,
+      "success": true,
+      "details": "",
+      "timestamp": "2026-02-11T21:11:22.170730"
+    },
+    {
+      "test_name": "Update Expense",
+      "method": "PATCH",
+      "endpoint": "expenses/exp_d3be1589f0dd",
+      "expected_status": 200,
+      "actual_status": 200,
+      "success": true,
+      "details": "",
+      "timestamp": "2026-02-11T21:11:22.213510"
+    },
+    {
+      "test_name": "Delete Expense (Soft Delete)",
+      "method": "DELETE",
+      "endpoint": "expenses/exp_d3be1589f0dd",
+      "expected_status": 200,
+      "actual_status": 200,
+      "success": true,
+      "details": "",
+      "timestamp": "2026-02-11T21:11:22.252619"
+    },
+    {
+      "test_name": "Get Deleted Expense",
+      "method": "GET",
+      "endpoint": "expenses/exp_d3be1589f0dd",
+      "expected_status": 404,
+      "actual_status": 404,
+      "success": true,
+      "details": "",
+      "timestamp": "2026-02-11T21:11:22.289182"
+    },
+    {
+      "test_name": "Manager Location Finance Summary",
+      "method": "GET",
+      "endpoint": "finance/location-summary",
+      "expected_status": 200,
+      "actual_status": 200,
+      "success": true,
+      "details": "",
+      "timestamp": "2026-02-11T21:11:22.329629"
+    },
+    {
+      "test_name": "Payroll by Staff",
+      "method": "GET",
+      "endpoint": "finance/payroll-by-staff",
+      "expected_status": 200,
+      "actual_status": 200,
+      "success": true,
+      "details": "",
+      "timestamp": "2026-02-11T21:11:22.366608"
+    },
+    {
+      "test_name": "Owner Finance Summary",
+      "method": "GET",
+      "endpoint": "finance/owner-summary",
+      "expected_status": 200,
+      "actual_status": 200,
+      "success": true,
+      "details": "",
+      "timestamp": "2026-02-11T21:11:22.409862"
+    },
+    {
+      "test_name": "Owner HR Overview",
+      "method": "GET",
+      "endpoint": "hr/owner-overview",
+      "expected_status": 200,
+      "actual_status": 200,
+      "success": true,
+      "details": "",
+      "timestamp": "2026-02-11T21:11:22.457936"
+    }
+  ],
+  "timestamp": "2026-02-11T21:11:22.458821"
+}

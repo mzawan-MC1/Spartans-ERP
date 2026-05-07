@@ -1,0 +1,165 @@
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Manrope:wght@400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    :root {
+        --background: 224 35% 6%;
+        --foreground: 220 25% 96%;
+        --card: 224 28% 10%;
+        --card-foreground: 220 25% 96%;
+        --popover: 224 28% 9%;
+        --popover-foreground: 220 25% 96%;
+        --primary: 0 84% 58%;
+        --primary-foreground: 0 0% 100%;
+        --secondary: 224 22% 14%;
+        --secondary-foreground: 220 25% 96%;
+        --muted: 224 22% 14%;
+        --muted-foreground: 220 11% 70%;
+        --accent: 248 35% 16%;
+        --accent-foreground: 220 25% 96%;
+        --destructive: 0 72% 44%;
+        --destructive-foreground: 0 0% 100%;
+        --border: 224 20% 18%;
+        --input: 224 20% 18%;
+        --ring: 0 84% 58%;
+        --chart-1: 0 84% 58%;
+        --chart-2: 262 83% 62%;
+        --chart-3: 204 92% 58%;
+        --chart-4: 160 84% 44%;
+        --chart-5: 30 93% 58%;
+        --radius: 0.85rem;
+    }
+}
+
+@layer base {
+    * {
+        @apply border-border;
+    }
+    body {
+        @apply bg-background text-foreground font-body antialiased;
+        margin: 0;
+    }
+    ::selection {
+        @apply bg-primary text-primary-foreground;
+    }
+}
+
+@layer base {
+    [data-debug-wrapper="true"] {
+        display: contents !important;
+    }
+    [data-debug-wrapper="true"] > * {
+        margin-left: inherit; margin-right: inherit;
+        margin-top: inherit; margin-bottom: inherit;
+        padding-left: inherit; padding-right: inherit;
+        padding-top: inherit; padding-bottom: inherit;
+        column-gap: inherit; row-gap: inherit; gap: inherit;
+        border-left-width: inherit; border-right-width: inherit;
+        border-top-width: inherit; border-bottom-width: inherit;
+        border-left-style: inherit; border-right-style: inherit;
+        border-top-style: inherit; border-bottom-style: inherit;
+        border-left-color: inherit; border-right-color: inherit;
+        border-top-color: inherit; border-bottom-color: inherit;
+    }
+}
+
+/* Scoped Content Fix for CMS Rendered HTML */
+@layer components {
+    .discipline-content,
+    .blog-content,
+    .static-page-content {
+        width: 100% !important;
+        max-width: 100% !important;
+        overflow-wrap: break-word !important;
+        word-wrap: break-word !important;
+        word-break: break-word !important;
+    }
+    .discipline-content *,
+    .blog-content *,
+    .static-page-content * {
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+    .discipline-content strong,
+    .blog-content strong,
+    .static-page-content strong {
+        background-color: transparent !important;
+        color: inherit !important;
+        display: inline !important;
+        white-space: normal !important;
+    }
+    .discipline-content p, 
+    .discipline-content h1, 
+    .discipline-content h2, 
+    .discipline-content h3, 
+    .discipline-content h4, 
+    .discipline-content h5, 
+    .discipline-content h6, 
+    .discipline-content li, 
+    .discipline-content div, 
+    .discipline-content span,
+    .blog-content p, 
+    .blog-content h1, 
+    .blog-content h2, 
+    .blog-content h3, 
+    .blog-content h4, 
+    .blog-content h5, 
+    .blog-content h6, 
+    .blog-content li, 
+    .blog-content div, 
+    .blog-content span,
+    .static-page-content p, 
+    .static-page-content h1, 
+    .static-page-content h2, 
+    .static-page-content h3, 
+    .static-page-content h4, 
+    .static-page-content h5, 
+    .static-page-content h6, 
+    .static-page-content li, 
+    .static-page-content div, 
+    .static-page-content span {
+        white-space: normal !important;
+        overflow-wrap: break-word !important;
+        word-break: break-word !important;
+    }
+    .discipline-content img, 
+    .discipline-content video, 
+    .discipline-content iframe, 
+    .discipline-content table, 
+    .discipline-content pre,
+    .blog-content img, 
+    .blog-content video, 
+    .blog-content iframe, 
+    .blog-content table, 
+    .blog-content pre,
+    .static-page-content img, 
+    .static-page-content video, 
+    .static-page-content iframe, 
+    .static-page-content table, 
+    .static-page-content pre {
+        max-width: 100% !important;
+        height: auto !important;
+    }
+}
+
+/* RTL Support for Arabic */
+[dir="rtl"] {
+    text-align: right;
+}
+/* Tailwind flex handles direction automatically with dir attribute */
+[dir="rtl"] .space-x-2 > :not([hidden]) ~ :not([hidden]),
+[dir="rtl"] .space-x-3 > :not([hidden]) ~ :not([hidden]),
+[dir="rtl"] .space-x-4 > :not([hidden]) ~ :not([hidden]),
+[dir="rtl"] .space-x-6 > :not([hidden]) ~ :not([hidden]),
+[dir="rtl"] .space-x-8 > :not([hidden]) ~ :not([hidden]) {
+    --tw-space-x-reverse: 1;
+}
+[dir="rtl"] .ml-1, [dir="rtl"] .ml-2, [dir="rtl"] .ml-4 {
+    margin-left: 0;
+}
+[dir="rtl"] .mr-1, [dir="rtl"] .mr-2, [dir="rtl"] .mr-4 {
+    margin-right: 0;
+}
