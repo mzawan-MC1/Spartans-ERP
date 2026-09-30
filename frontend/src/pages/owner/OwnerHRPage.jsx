@@ -59,6 +59,12 @@ export default function OwnerHRPage() {
   const [savingStaff, setSavingStaff] = useState(false);
   const [deleteStaffDialog, setDeleteStaffDialog] = useState({ open: false, staff: null });
 
+  const HEAD_OFFICE_LOCATION_ID = '__HEAD_OFFICE__';
+  const isHeadOfficeLocation = (v) => v === HEAD_OFFICE_LOCATION_ID;
+  const toFormLocationId = (v) => (v ? v : HEAD_OFFICE_LOCATION_ID);
+  const toPayloadLocationId = (v) => (isHeadOfficeLocation(v) ? null : v);
+  const toApiLocationIdParam = (v) => (isHeadOfficeLocation(v) ? 'head_office' : v);
+
   const [periodStart, setPeriodStart] = useState(new Date(new Date().getFullYear(), new Date().getMonth() - 2, 1).toISOString().split('T')[0]);
   const [periodEnd, setPeriodEnd] = useState(new Date().toISOString().split('T')[0]);
   const [payrollDialog, setPayrollDialog] = useState({ open: false });
@@ -218,7 +224,7 @@ export default function OwnerHRPage() {
   };
 
   const openCreateStaff = (defaultRole) => {
-    const defaultLocationId = currentLocation?.location_id || (locations[0]?.location_id || '');
+    const defaultLocationId = currentLocation?.location_id || (locations[0]?.location_id || HEAD_OFFICE_LOCATION_ID);
     setStaffForm({
       location_id: defaultLocationId,
       first_name: '',
@@ -239,7 +245,7 @@ export default function OwnerHRPage() {
 
   const openEditStaff = (s) => {
     setStaffForm({
-      location_id: s.location_id,
+      location_id: toFormLocationId(s.location_id),
       first_name: s.first_name || '',
       last_name: s.last_name || '',
       email: s.email || '',
@@ -260,8 +266,10 @@ export default function OwnerHRPage() {
     if (!staffForm.first_name.trim()) { toast.error('First name required'); return; }
     if (!staffForm.location_id) { toast.error('Select a branch'); return; }
     setSavingStaff(true);
+    const normalizedLocationId = toPayloadLocationId(staffForm.location_id);
     const payload = {
       ...staffForm,
+      location_id: normalizedLocationId,
       email: staffForm.email.trim().toLowerCase(),
       pay_structure: {
         ...staffForm.pay_structure,
@@ -270,10 +278,11 @@ export default function OwnerHRPage() {
     };
     try {
       if (staffDialog.editing) {
-        await staffAPI.update(staffDialog.editing.staff_id, payload, staffDialog.editing.location_id);
+        const scopeLocationId = staffDialog.editing.location_id || undefined;
+        await staffAPI.update(staffDialog.editing.staff_id, payload, scopeLocationId);
         toast.success('Employee updated');
       } else {
-        await staffAPI.create(payload, staffForm.location_id);
+        await staffAPI.create(payload, toApiLocationIdParam(staffForm.location_id));
         toast.success('Employee added');
       }
       setStaffDialog({ open: false, editing: null, defaultRole: 'STAFF' });
@@ -764,21 +773,20 @@ export default function OwnerHRPage() {
               </DialogDescription>
             </DialogHeader>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {!staffDialog.editing && (
-                <div className="space-y-2 md:col-span-2">
-                  <Label className="text-zinc-500 text-[10px] font-heading uppercase tracking-wider">Branch</Label>
-                  <Select value={staffForm.location_id} onValueChange={(v) => setStaffForm((f) => ({ ...f, location_id: v }))}>
-                    <SelectTrigger className="bg-zinc-950 border-zinc-800 text-white text-sm h-10">
-                      <SelectValue placeholder="Select branch" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-zinc-900 border-zinc-800">
-                      {(locations || []).map((l) => (
-                        <SelectItem key={l.location_id} value={l.location_id}>{l.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
+              <div className="space-y-2 md:col-span-2">
+                <Label className="text-zinc-500 text-[10px] font-heading uppercase tracking-wider">Branch</Label>
+                <Select value={staffForm.location_id} onValueChange={(v) => setStaffForm((f) => ({ ...f, location_id: v }))}>
+                  <SelectTrigger className="bg-zinc-950 border-zinc-800 text-white text-sm h-10">
+                    <SelectValue placeholder="Select branch" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-zinc-900 border-zinc-800">
+                    <SelectItem value={HEAD_OFFICE_LOCATION_ID}>Head Office</SelectItem>
+                    {(locations || []).map((l) => (
+                      <SelectItem key={l.location_id} value={l.location_id}>{l.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="space-y-2">
                 <Label className="text-zinc-500 text-[10px] font-heading uppercase tracking-wider">First Name</Label>
                 <Input value={staffForm.first_name} onChange={(e) => setStaffForm((f) => ({ ...f, first_name: e.target.value }))} className="bg-zinc-950 border-zinc-800 text-white" />

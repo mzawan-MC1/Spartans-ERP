@@ -460,8 +460,10 @@ async def create_staff(data: StaffCreate, request: Request):
     if user["role"] == "LOCATION_MANAGER":
         lid = user["location_id"]
     else: # OWNER
-        lid = request.query_params.get("location_id")
-        if not lid:
+        raw_lid = request.query_params.get("location_id")
+        explicit_head_office = (raw_lid or "").strip().lower() == "head_office"
+        lid = None if explicit_head_office else raw_lid
+        if not lid and not explicit_head_office:
              # Try to get from body if we add it to StaffCreate later, but for now require param or default to first location
              owner_id = _effective_owner_id(user)
              if not owner_id:
@@ -470,7 +472,7 @@ async def create_staff(data: StaffCreate, request: Request):
              if not locations:
                  raise HTTPException(400, "No locations found. Create a location first.")
              lid = locations[0]["location_id"]
-        else:
+        elif lid:
              await _require_owner_access_to_location(user, lid)
     
     staff_id = f"staff_{uuid.uuid4().hex[:12]}"
@@ -1283,12 +1285,7 @@ async def location_finance_summary(request: Request, period_start: Optional[str]
     period_end_next = (date.fromisoformat(period_end) + timedelta(days=1)).isoformat()
 
     pay_query = {"location_id": lid, "period_start": {"$gte": period_start}, "period_end": {"$lte": period_end}}
-    payroll_records = await _db.payroll_records.find(pay_query, {"_id": 0}).to_list(500)
-    total_payroll = sum(r.get("total_payable", 0) for r in payroll_records)
-
     exp_query = {"location_id": lid, "is_deleted": False, "date": {"$gte": period_start, "$lte": period_end}}
-    expenses = await _db.expenses.find(exp_query, {"_id": 0}).to_list(500)
-    total_expenses = sum(e.get("amount", 0) for e in expenses)
 
     rev_query = {
         "location_id": lid,
@@ -1299,16 +1296,30 @@ async def location_finance_summary(request: Request, period_start: Optional[str]
             {"paid_at": {"$exists": False}, "created_at": {"$gte": period_start, "$lt": period_end_next}},
         ],
     }
-    payments = await _db.payments.find(rev_query, {"_id": 0, "amount": 1}).to_list(5000)
-    total_revenue = sum(p.get("amount", 0) for p in payments)
+    import asyncio
+    payroll_agg_task = _db.payroll_records.aggregate([
+        {"$match": pay_query},
+        {"$group": {"_id": None, "total": {"$sum": "$total_payable"}}},
+    ]).to_list(1)
+    expenses_agg_task = _db.expenses.aggregate([
+        {"$match": exp_query},
+        {"$group": {"_id": "$category", "amount": {"$sum": "$amount"}}},
+    ]).to_list(200)
+    revenue_agg_task = _db.payments.aggregate([
+        {"$match": rev_query},
+        {"$group": {"_id": None, "total": {"$sum": "$amount"}}},
+    ]).to_list(1)
+    loc_task = _db.locations.find_one({"location_id": lid}, {"_id": 0, "default_currency": 1})
 
-    # Group expenses by category
-    by_category = {}
-    for e in expenses:
-        cat = e.get("category", "MISC")
-        by_category[cat] = by_category.get(cat, 0) + e.get("amount", 0)
+    payroll_agg, expenses_agg, revenue_agg, loc = await asyncio.gather(
+        payroll_agg_task, expenses_agg_task, revenue_agg_task, loc_task
+    )
 
-    loc = await _db.locations.find_one({"location_id": lid}, {"_id": 0, "default_currency": 1})
+    total_payroll = float((payroll_agg[0] or {}).get("total", 0)) if payroll_agg else 0
+    total_expenses = sum(float(e.get("amount", 0)) for e in (expenses_agg or []))
+    total_revenue = float((revenue_agg[0] or {}).get("total", 0)) if revenue_agg else 0
+    by_category = { (e.get("_id") or "MISC"): float(e.get("amount", 0)) for e in (expenses_agg or []) }
+
     currency = loc.get("default_currency", "AED") if loc else "AED"
 
     return {
@@ -1339,14 +1350,11 @@ async def owner_finance_summary(request: Request, period_start: Optional[str] = 
     grand_payroll = 0
     grand_expenses = 0
     grand_revenue = 0
+    import asyncio
     for loc in locations:
         lid = loc["location_id"]
         pay_q = {"location_id": lid, "period_start": {"$gte": period_start}, "period_end": {"$lte": period_end}}
-        pay_recs = await _db.payroll_records.find(pay_q, {"_id": 0, "total_payable": 1}).to_list(500)
-        tp = sum(r.get("total_payable", 0) for r in pay_recs)
         exp_q = {"location_id": lid, "is_deleted": False, "date": {"$gte": period_start, "$lte": period_end}}
-        exps = await _db.expenses.find(exp_q, {"_id": 0, "amount": 1}).to_list(500)
-        te = sum(e.get("amount", 0) for e in exps)
         rev_q = {
             "location_id": lid,
             "status": {"$in": ["paid", "approved", "completed"]},
@@ -1356,14 +1364,30 @@ async def owner_finance_summary(request: Request, period_start: Optional[str] = 
                 {"paid_at": {"$exists": False}, "created_at": {"$gte": period_start, "$lt": period_end_next}},
             ],
         }
-        pays = await _db.payments.find(rev_q, {"_id": 0, "amount": 1}).to_list(5000)
-        tr = sum(p.get("amount", 0) for p in pays)
-        # Count active staff (using is_active field)
-        staff_count = await _db.staff.count_documents({
+        payroll_task = _db.payroll_records.aggregate([
+            {"$match": pay_q},
+            {"$group": {"_id": None, "total": {"$sum": "$total_payable"}}},
+        ]).to_list(1)
+        expenses_task = _db.expenses.aggregate([
+            {"$match": exp_q},
+            {"$group": {"_id": None, "total": {"$sum": "$amount"}}},
+        ]).to_list(1)
+        revenue_task = _db.payments.aggregate([
+            {"$match": rev_q},
+            {"$group": {"_id": None, "total": {"$sum": "$amount"}}},
+        ]).to_list(1)
+        staff_count_task = _db.staff.count_documents({
             "location_id": lid, 
             "is_active": True,
             "$or": [{"deleted_at": None}, {"deleted_at": {"$exists": False}}]
         })
+
+        payroll_agg, expenses_agg, revenue_agg, staff_count = await asyncio.gather(
+            payroll_task, expenses_task, revenue_task, staff_count_task
+        )
+        tp = float((payroll_agg[0] or {}).get("total", 0)) if payroll_agg else 0
+        te = float((expenses_agg[0] or {}).get("total", 0)) if expenses_agg else 0
+        tr = float((revenue_agg[0] or {}).get("total", 0)) if revenue_agg else 0
         grand_payroll += tp
         grand_expenses += te
         grand_revenue += tr
@@ -1388,20 +1412,33 @@ async def payroll_by_staff(request: Request, period_start: Optional[str] = None,
         period_start = (date.today() - timedelta(days=90)).isoformat()
     if not period_end:
         period_end = date.today().isoformat()
-    staff_list = await _db.staff.find({"location_id": lid}, {"_id": 0}).to_list(200)
+    staff_list = await _db.staff.find({"location_id": lid}, {"_id": 0, "staff_id": 1, "first_name": 1, "last_name": 1, "role": 1, "status": 1}).to_list(200)
+    staff_ids = [s.get("staff_id") for s in staff_list if s.get("staff_id")]
+
+    totals_by_staff = {}
+    periods_by_staff = {}
+    if staff_ids:
+        agg = await _db.payroll_records.aggregate([
+            {"$match": {"location_id": lid, "staff_id": {"$in": staff_ids}, "period_start": {"$gte": period_start}, "period_end": {"$lte": period_end}}},
+            {"$group": {"_id": "$staff_id", "total": {"$sum": "$total_payable"}, "periods": {"$sum": 1}}},
+        ]).to_list(len(staff_ids))
+        for a in agg:
+            sid = a.get("_id")
+            if not sid:
+                continue
+            totals_by_staff[sid] = float(a.get("total", 0))
+            periods_by_staff[sid] = int(a.get("periods", 0))
+
     result = []
     for s in staff_list:
-        recs = await _db.payroll_records.find(
-            {"staff_id": s["staff_id"], "location_id": lid,
-             "period_start": {"$gte": period_start}, "period_end": {"$lte": period_end}},
-            {"_id": 0}
-        ).to_list(50)
-        total = sum(r.get("total_payable", 0) for r in recs)
-        avg = total / len(recs) if recs else 0
+        sid = s.get("staff_id")
+        total = float(totals_by_staff.get(sid, 0))
+        periods = int(periods_by_staff.get(sid, 0))
+        avg = total / periods if periods else 0
         result.append({
-            "staff_id": s["staff_id"], "name": f"{s['first_name']} {s['last_name']}",
-            "role": s["role"], "status": s["status"],
-            "total_payable": total, "periods": len(recs), "avg_per_period": round(avg, 2)
+            "staff_id": sid, "name": f"{s.get('first_name','')} {s.get('last_name','')}".strip(),
+            "role": s.get("role"), "status": s.get("status"),
+            "total_payable": total, "periods": periods, "avg_per_period": round(avg, 2)
         })
     return result
 

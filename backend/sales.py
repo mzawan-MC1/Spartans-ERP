@@ -889,22 +889,39 @@ async def list_sales_teams(
 
     teams = await _db.sales_teams.find(query, {"_id": 0}).sort("created_at", -1).to_list(200)
 
+    team_ids = [t.get("sales_team_id") for t in teams if t.get("sales_team_id")]
+    lead_ids = list({t.get("team_lead_staff_id") for t in teams if t.get("team_lead_staff_id")})
+    location_ids = list({t.get("location_id") for t in teams if t.get("location_id")})
+
+    counts_by_team = {}
+    if team_ids:
+        counts = await _db.sales_team_members.aggregate([
+            {"$match": {"sales_team_id": {"$in": team_ids}, "is_active": True}},
+            {"$group": {"_id": "$sales_team_id", "member_count": {"$sum": 1}}},
+        ]).to_list(len(team_ids))
+        counts_by_team = {c.get("_id"): int(c.get("member_count", 0)) for c in counts if c.get("_id")}
+
+    leads_by_id = {}
+    if lead_ids:
+        leads = await _db.staff.find(
+            {"staff_id": {"$in": lead_ids}},
+            {"_id": 0, "staff_id": 1, "first_name": 1, "last_name": 1},
+        ).to_list(len(lead_ids))
+        leads_by_id = {s.get("staff_id"): s for s in leads if s.get("staff_id")}
+
+    locs_by_id = {}
+    if location_ids:
+        locs = await _db.locations.find(
+            {"location_id": {"$in": location_ids}},
+            {"_id": 0, "location_id": 1, "name": 1, "city": 1},
+        ).to_list(len(location_ids))
+        locs_by_id = {l.get("location_id"): l for l in locs if l.get("location_id")}
+
     for t in teams:
-        t["member_count"] = await _db.sales_team_members.count_documents(
-            {"sales_team_id": t["sales_team_id"], "is_active": True}
-        )
-        if t.get("team_lead_staff_id"):
-            s = await _db.staff.find_one(
-                {"staff_id": t["team_lead_staff_id"]},
-                {"_id": 0, "staff_id": 1, "first_name": 1, "last_name": 1}
-            )
-            t["team_lead"] = s
-        else:
-            t["team_lead"] = None
-        loc = await _db.locations.find_one(
-            {"location_id": t["location_id"]}, {"_id": 0, "name": 1, "city": 1}
-        )
-        t["location_name"] = loc["name"] if loc else "Unknown"
+        t["member_count"] = int(counts_by_team.get(t.get("sales_team_id"), 0))
+        t["team_lead"] = leads_by_id.get(t.get("team_lead_staff_id")) if t.get("team_lead_staff_id") else None
+        loc = locs_by_id.get(t.get("location_id"))
+        t["location_name"] = loc.get("name") if loc else "Unknown"
         t["location_city"] = loc.get("city", "") if loc else ""
 
     return {"teams": teams, "total": len(teams)}
@@ -976,12 +993,17 @@ async def get_sales_team(team_id: str, request: Request):
     members = await _db.sales_team_members.find(
         {"sales_team_id": team_id, "is_active": True}, {"_id": 0}
     ).to_list(50)
-    for m in members:
-        m["staff"] = await _db.staff.find_one(
-            {"staff_id": m["staff_id"]},
+    staff_ids = list({m.get("staff_id") for m in members if m.get("staff_id")})
+    staff_by_id = {}
+    if staff_ids:
+        staff_docs = await _db.staff.find(
+            {"staff_id": {"$in": staff_ids}},
             {"_id": 0, "staff_id": 1, "first_name": 1, "last_name": 1,
              "email": 1, "phone": 1, "profile_image_path": 1, "role": 1}
-        )
+        ).to_list(len(staff_ids))
+        staff_by_id = {s.get("staff_id"): s for s in staff_docs if s.get("staff_id")}
+    for m in members:
+        m["staff"] = staff_by_id.get(m.get("staff_id"))
     team["members"] = members
 
     loc = await _db.locations.find_one(
@@ -1055,12 +1077,17 @@ async def list_team_members(team_id: str, request: Request, include_history: boo
     if not include_history:
         query["is_active"] = True
     members = await _db.sales_team_members.find(query, {"_id": 0}).sort("created_at", -1).to_list(100)
-    for m in members:
-        m["staff"] = await _db.staff.find_one(
-            {"staff_id": m["staff_id"]},
+    staff_ids = list({m.get("staff_id") for m in members if m.get("staff_id")})
+    staff_by_id = {}
+    if staff_ids:
+        staff_docs = await _db.staff.find(
+            {"staff_id": {"$in": staff_ids}},
             {"_id": 0, "staff_id": 1, "first_name": 1, "last_name": 1,
              "email": 1, "phone": 1, "profile_image_path": 1, "role": 1}
-        )
+        ).to_list(len(staff_ids))
+        staff_by_id = {s.get("staff_id"): s for s in staff_docs if s.get("staff_id")}
+    for m in members:
+        m["staff"] = staff_by_id.get(m.get("staff_id"))
     return {"members": members, "total": len(members)}
 
 
@@ -4374,6 +4401,7 @@ async def list_available_staff(request: Request, location_id: Optional[str] = No
 async def get_sales_stats(request: Request, location_id: Optional[str] = None):
     user, staff, kind = await _require_crm_view(request)
     lf = await _lead_visibility_query(user, staff, kind, location_id=location_id)
+    import asyncio
 
     total_teams = 0
     total_csrs = 0
@@ -4382,30 +4410,47 @@ async def get_sales_stats(request: Request, location_id: Optional[str] = None):
         team_lf = {}
         if lf.get("location_id") is not None:
             team_lf["location_id"] = lf.get("location_id")
-        total_teams = await _db.sales_teams.count_documents({**team_lf, "is_active": True}) if team_lf else await _db.sales_teams.count_documents({"is_active": True})
-        total_csrs = await _db.sales_team_members.count_documents(
-            {**team_lf, "is_active": True, "member_type": "AGENT"}
-        ) if team_lf else await _db.sales_team_members.count_documents({"is_active": True, "member_type": "AGENT"})
-        total_team_leads = await _db.sales_team_members.count_documents(
-            {**team_lf, "is_active": True, "member_type": "TEAM_LEAD"}
-        ) if team_lf else await _db.sales_team_members.count_documents({"is_active": True, "member_type": "TEAM_LEAD"})
+        teams_q = {**team_lf, "is_active": True} if team_lf else {"is_active": True}
+        agent_q = {**team_lf, "is_active": True, "member_type": "AGENT"} if team_lf else {"is_active": True, "member_type": "AGENT"}
+        lead_q = {**team_lf, "is_active": True, "member_type": "TEAM_LEAD"} if team_lf else {"is_active": True, "member_type": "TEAM_LEAD"}
+        total_teams, total_csrs, total_team_leads = await asyncio.gather(
+            _db.sales_teams.count_documents(teams_q),
+            _db.sales_team_members.count_documents(agent_q),
+            _db.sales_team_members.count_documents(lead_q),
+        )
 
-    total_leads = await _db.sales_leads.count_documents(lf)
-    new_leads = await _db.sales_leads.count_documents({**lf, "status": {"$in": _status_terms(["new"])}})
-    won_leads = await _db.sales_leads.count_documents({**lf, "status": {"$in": CONVERTED_STATUS_TERMS}})
-    lost_leads = await _db.sales_leads.count_documents({**lf, "status": {"$in": NOT_WORKING_STATUS_TERMS}})
-    in_progress = await _db.sales_leads.count_documents({**lf, "status": {"$in": _status_terms(["under_discussion", "under_process", "call_back_requested", "follow_up_pending"])}})
-
-    working = await _db.sales_leads.count_documents({**lf, "status": {"$in": WORKING_STATUS_TERMS}})
-    not_working = await _db.sales_leads.count_documents({**lf, "status": {"$in": NOT_WORKING_STATUS_TERMS}})
-    converted = await _db.sales_leads.count_documents({**lf, "status": {"$in": CONVERTED_STATUS_TERMS}})
-    transferred = await _db.sales_leads.count_documents({**lf, "status": {"$in": TRANSFERRED_STATUS_TERMS}})
     today = datetime.now(timezone.utc).date().isoformat()
-    today_follow_ups = await _db.sales_leads.count_documents({**lf, "next_follow_up_date": {"$regex": f"^{re.escape(today)}"}})
-    overdue_follow_ups = await _db.sales_leads.count_documents({**lf, "next_follow_up_date": {"$lt": today}})
-    callback_requested = await _db.sales_leads.count_documents({**lf, "status": {"$in": _status_terms(["call_back_requested", "call_back"])}})
+    (
+        total_leads,
+        new_leads,
+        won_leads,
+        lost_leads,
+        in_progress,
+        working,
+        not_working,
+        converted,
+        transferred,
+        today_follow_ups,
+        overdue_follow_ups,
+        callback_requested,
+    ) = await asyncio.gather(
+        _db.sales_leads.count_documents(lf),
+        _db.sales_leads.count_documents({**lf, "status": {"$in": _status_terms(["new"])}}),
+        _db.sales_leads.count_documents({**lf, "status": {"$in": CONVERTED_STATUS_TERMS}}),
+        _db.sales_leads.count_documents({**lf, "status": {"$in": NOT_WORKING_STATUS_TERMS}}),
+        _db.sales_leads.count_documents({**lf, "status": {"$in": _status_terms(["under_discussion", "under_process", "call_back_requested", "follow_up_pending"])}}),
+        _db.sales_leads.count_documents({**lf, "status": {"$in": WORKING_STATUS_TERMS}}),
+        _db.sales_leads.count_documents({**lf, "status": {"$in": NOT_WORKING_STATUS_TERMS}}),
+        _db.sales_leads.count_documents({**lf, "status": {"$in": CONVERTED_STATUS_TERMS}}),
+        _db.sales_leads.count_documents({**lf, "status": {"$in": TRANSFERRED_STATUS_TERMS}}),
+        _db.sales_leads.count_documents({**lf, "next_follow_up_date": {"$regex": f"^{re.escape(today)}"}}),
+        _db.sales_leads.count_documents({**lf, "next_follow_up_date": {"$lt": today}}),
+        _db.sales_leads.count_documents({**lf, "status": {"$in": _status_terms(["call_back_requested", "call_back"])}}),
+    )
 
     pipeline_counts = {}
+    tasks = []
+    keys = []
     for s in VALID_LEAD_STATUSES:
         if s == "call_back_requested":
             terms = _status_terms(["call_back_requested", "call_back"])
@@ -4421,7 +4466,10 @@ async def get_sales_stats(request: Request, location_id: Optional[str] = None):
             terms = _status_terms(["not_interested", "lost"])
         else:
             terms = _status_terms([s])
-        pipeline_counts[s] = await _db.sales_leads.count_documents({**lf, "status": {"$in": terms}})
+        keys.append(s)
+        tasks.append(_db.sales_leads.count_documents({**lf, "status": {"$in": terms}}))
+    results = await asyncio.gather(*tasks) if tasks else []
+    pipeline_counts = {k: int(v) for k, v in zip(keys, results)}
 
     src_agg = await _db.sales_leads.aggregate([
         {"$match": lf},
@@ -4472,35 +4520,46 @@ async def get_crm_dashboard(request: Request, location_id: Optional[str] = None)
     user, staff, kind = await _require_crm_view(request)
     lf = await _lead_visibility_query(user, staff, kind, location_id=location_id)
     today = datetime.now(timezone.utc).date().isoformat()
-
-    total_leads = await _db.sales_leads.count_documents(lf)
-    converted = await _db.sales_leads.count_documents({**lf, "status": {"$in": CONVERTED_STATUS_TERMS}})
-    transferred = await _db.sales_leads.count_documents({**lf, "status": {"$in": TRANSFERRED_STATUS_TERMS}})
-    working = await _db.sales_leads.count_documents({**lf, "status": {"$in": WORKING_STATUS_TERMS}})
-    not_working = await _db.sales_leads.count_documents({**lf, "status": {"$in": NOT_WORKING_STATUS_TERMS}})
-    callback_requested = await _db.sales_leads.count_documents({**lf, "status": {"$in": _status_terms(["call_back_requested", "call_back"])}})
-    duplicates = await _db.sales_leads.count_documents({**lf, "status": {"$in": _status_terms(["duplicate"])}})
-
-    today_callbacks = await _db.sales_leads.count_documents({**lf, "next_follow_up_date": {"$regex": f"^{re.escape(today)}"}})
-    overdue = await _db.sales_leads.count_documents({**lf, "next_follow_up_date": {"$lt": today}})
-
-    src = await _db.sales_leads.aggregate([
-        {"$match": lf},
-        {"$group": {"_id": "$source", "count": {"$sum": 1}}},
-        {"$sort": {"count": -1}},
-    ]).to_list(20)
-
-    program = await _db.sales_leads.aggregate([
-        {"$match": lf},
-        {"$group": {"_id": "$program_interest", "count": {"$sum": 1}}},
-        {"$sort": {"count": -1}},
-    ]).to_list(20)
-
-    plan = await _db.sales_leads.aggregate([
-        {"$match": lf},
-        {"$group": {"_id": "$membership_plan", "count": {"$sum": 1}}},
-        {"$sort": {"count": -1}},
-    ]).to_list(20)
+    import asyncio
+    (
+        total_leads,
+        converted,
+        transferred,
+        working,
+        not_working,
+        callback_requested,
+        duplicates,
+        today_callbacks,
+        overdue,
+        src,
+        program,
+        plan,
+    ) = await asyncio.gather(
+        _db.sales_leads.count_documents(lf),
+        _db.sales_leads.count_documents({**lf, "status": {"$in": CONVERTED_STATUS_TERMS}}),
+        _db.sales_leads.count_documents({**lf, "status": {"$in": TRANSFERRED_STATUS_TERMS}}),
+        _db.sales_leads.count_documents({**lf, "status": {"$in": WORKING_STATUS_TERMS}}),
+        _db.sales_leads.count_documents({**lf, "status": {"$in": NOT_WORKING_STATUS_TERMS}}),
+        _db.sales_leads.count_documents({**lf, "status": {"$in": _status_terms(["call_back_requested", "call_back"])}}),
+        _db.sales_leads.count_documents({**lf, "status": {"$in": _status_terms(["duplicate"])}}),
+        _db.sales_leads.count_documents({**lf, "next_follow_up_date": {"$regex": f"^{re.escape(today)}"}}),
+        _db.sales_leads.count_documents({**lf, "next_follow_up_date": {"$lt": today}}),
+        _db.sales_leads.aggregate([
+            {"$match": lf},
+            {"$group": {"_id": "$source", "count": {"$sum": 1}}},
+            {"$sort": {"count": -1}},
+        ]).to_list(20),
+        _db.sales_leads.aggregate([
+            {"$match": lf},
+            {"$group": {"_id": "$program_interest", "count": {"$sum": 1}}},
+            {"$sort": {"count": -1}},
+        ]).to_list(20),
+        _db.sales_leads.aggregate([
+            {"$match": lf},
+            {"$group": {"_id": "$membership_plan", "count": {"$sum": 1}}},
+            {"$sort": {"count": -1}},
+        ]).to_list(20),
+    )
 
     can_manage = (kind in ("CSR", "TEAM_LEAD")) or await _check_perm(user, "manager.manage_sales_location")
     scope_lids = []

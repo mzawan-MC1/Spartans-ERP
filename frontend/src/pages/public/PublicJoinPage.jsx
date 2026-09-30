@@ -324,7 +324,7 @@ export default function PublicJoinPage() {
               <div className="max-h-[70vh] overflow-y-auto overflow-x-hidden rounded-md border border-zinc-800 bg-zinc-950 p-4">
                 {activeAgreement?.content_html ? (
                   <div
-                    className="prose prose-invert max-w-none w-full break-words whitespace-normal overflow-x-hidden prose-pre:whitespace-pre-wrap prose-pre:break-words prose-code:break-words prose-img:max-w-full prose-img:h-auto prose-table:w-full prose-table:table-fixed prose-p:text-zinc-200 prose-li:text-zinc-200 prose-strong:text-white prose-a:text-red-300"
+                    className="prose prose-invert max-w-none w-full break-words whitespace-normal overflow-x-hidden prose-pre:whitespace-pre-wrap prose-pre:break-words prose-code:break-words prose-img:max-w-full prose-img:h-auto prose-table:w-full prose-table:table-fixed prose-p:text-zinc-200 prose-li:text-zinc-200 prose-strong:text-white prose-a:text-red-300 public-richtext"
                     dangerouslySetInnerHTML={{ __html: sanitizeHtml(activeAgreement.content_html) }}
                   />
                 ) : (
@@ -346,7 +346,7 @@ export default function PublicJoinPage() {
                   <div className="text-sm text-zinc-400">Loading…</div>
                 ) : termsPage?.content ? (
                   <div
-                    className="prose prose-invert max-w-none w-full break-words whitespace-normal overflow-x-hidden prose-pre:whitespace-pre-wrap prose-pre:break-words prose-code:break-words prose-img:max-w-full prose-img:h-auto prose-table:w-full prose-table:table-fixed prose-p:text-zinc-200 prose-li:text-zinc-200 prose-strong:text-white prose-a:text-red-300"
+                    className="prose prose-invert max-w-none w-full break-words whitespace-normal overflow-x-hidden prose-pre:whitespace-pre-wrap prose-pre:break-words prose-code:break-words prose-img:max-w-full prose-img:h-auto prose-table:w-full prose-table:table-fixed prose-p:text-zinc-200 prose-li:text-zinc-200 prose-strong:text-white prose-a:text-red-300 public-richtext"
                     dangerouslySetInnerHTML={{ __html: sanitizeHtml(termsPage.content) }}
                   />
                 ) : (
@@ -846,7 +846,7 @@ function LegacyPublicJoinPage() {
                     <div className="bg-zinc-800 p-4 rounded-lg max-h-48 overflow-y-auto">
                       <div 
                         dangerouslySetInnerHTML={{ __html: agreements[0]?.content_html || '' }}
-                        className="prose prose-invert prose-sm"
+                        className="prose prose-invert prose-sm public-richtext"
                       />
                     </div>
                     <div className="flex items-center space-x-2">

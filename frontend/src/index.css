@@ -68,6 +68,7 @@
 
 /* Scoped Content Fix for CMS Rendered HTML */
 @layer components {
+    .public-richtext,
     .discipline-content,
     .blog-content,
     .static-page-content {
@@ -76,7 +77,23 @@
         overflow-wrap: break-word !important;
         word-wrap: break-word !important;
         word-break: break-word !important;
+        text-align: start;
     }
+    .public-richtext ul,
+    .public-richtext ol {
+        padding-left: unset;
+        padding-right: unset;
+        padding-inline-start: 1.625em;
+    }
+    .public-richtext blockquote {
+        border-left-width: unset;
+        border-right-width: unset;
+        padding-left: unset;
+        padding-right: unset;
+        border-inline-start-width: 0.25rem;
+        padding-inline-start: 1em;
+    }
+    .public-richtext *,
     .discipline-content *,
     .blog-content *,
     .static-page-content * {

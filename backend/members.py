@@ -1559,21 +1559,38 @@ async def list_memberships(
                 "latest_status": {"$first": "$status"},
                 "has_success": {"$max": {"$cond": [{"$in": ["$status", list(membership_status.SUCCESS_PAYMENT_STATUSES)]}, 1, 0]}},
             }},
-        ]).to_list(None)
+        ]).to_list(len(membership_ids))
         payments_by_membership = {p["_id"]: p for p in payment_agg if p.get("_id")}
+
+    member_ids = list({m.get("member_id") for m in memberships if m.get("member_id")})
+    plan_ids = list({m.get("payment_plan_id") for m in memberships if m.get("payment_plan_id")})
+
+    members_by_id = {}
+    if member_ids:
+        members = await _db.members.find(
+            {"member_id": {"$in": member_ids}, "location_id": location_id},
+            {"_id": 0, "member_id": 1, "full_name": 1, "member_no": 1},
+        ).to_list(len(member_ids))
+        members_by_id = {m.get("member_id"): m for m in members if m.get("member_id")}
+
+    plans_by_id = {}
+    if plan_ids:
+        plans = await _db.pricing_plans.find(
+            {"plan_id": {"$in": plan_ids}},
+            {"_id": 0, "plan_id": 1, "name": 1, "currency": 1, "price": 1, "billing_cycle": 1},
+        ).to_list(len(plan_ids))
+        plans_by_id = {p.get("plan_id"): p for p in plans if p.get("plan_id")}
     
     # Enrich with member names and plan details
     for m in memberships:
         m["type"] = _normalize_membership_type(m.get("type"))
-        member = await _db.members.find_one({"member_id": m["member_id"]}, {"_id": 0, "full_name": 1, "member_no": 1})
-        m["member_name"] = member["full_name"] if member else "Unknown"
+        member = members_by_id.get(m.get("member_id"))
+        m["member_name"] = member.get("full_name") if member else "Unknown"
         m["member_no"] = member.get("member_no", "") if member else ""
         
-        # Enrich plan details
-        if m.get("payment_plan_id"):
-            plan = await _db.pricing_plans.find_one({"plan_id": m["payment_plan_id"]})
-            if plan:
-                m["payment_plan_name"] = f"{plan.get('name', 'Unknown Plan')} ({plan.get('currency', 'AED')} {plan.get('price', 0)} / {plan.get('billing_cycle', 'month')})"
+        plan = plans_by_id.get(m.get("payment_plan_id"))
+        if plan:
+            m["payment_plan_name"] = f"{plan.get('name', 'Unknown Plan')} ({plan.get('currency', 'AED')} {plan.get('price', 0)} / {plan.get('billing_cycle', 'month')})"
 
         pay_info = payments_by_membership.get(m.get("membership_id")) or {}
         latest_payment_status = pay_info.get("latest_status")
@@ -2780,9 +2797,18 @@ async def list_payments(
     payments = await _db.payments.find(query, {"_id": 0}).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
     
     # Enrich with member names
+    member_ids = list({p.get("member_id") for p in payments if p.get("member_id")})
+    members_by_id = {}
+    if member_ids:
+        members = await _db.members.find(
+            {"member_id": {"$in": member_ids}, "location_id": location_id},
+            {"_id": 0, "member_id": 1, "full_name": 1},
+        ).to_list(len(member_ids))
+        members_by_id = {m.get("member_id"): m for m in members if m.get("member_id")}
+
     for p in payments:
-        member = await _db.members.find_one({"member_id": p["member_id"]}, {"_id": 0, "full_name": 1})
-        p["member_name"] = member["full_name"] if member else "Unknown"
+        member = members_by_id.get(p.get("member_id"))
+        p["member_name"] = member.get("full_name") if member else "Unknown"
     
     return {"payments": payments, "total": total}
 
@@ -3365,6 +3391,7 @@ async def get_dashboard_alerts(request: Request, location_id: str = None):
     user = await require_member_access(request)
     location_id = await get_user_location(user, request)
     
+    import asyncio
     today = date.today().isoformat()
     seven_days = (date.today() + __import__('datetime').timedelta(days=7)).isoformat()
     
@@ -3374,14 +3401,6 @@ async def get_dashboard_alerts(request: Request, location_id: str = None):
         "status": "active",
         "end_date": {"$gte": today, "$lte": seven_days}
     }
-    expiring_count = await _db.memberships.count_documents(expiring_query)
-    expiring_list = await _db.memberships.find(expiring_query, {"_id": 0}).limit(10).to_list(10)
-    
-    # Enrich expiring with member names
-    for m in expiring_list:
-        member = await _db.members.find_one({"member_id": m["member_id"]}, {"_id": 0, "full_name": 1, "member_no": 1})
-        m["member_name"] = member["full_name"] if member else "Unknown"
-        m["member_no"] = member.get("member_no", "") if member else ""
     
     # Expired
     expired_query = {
@@ -3389,25 +3408,54 @@ async def get_dashboard_alerts(request: Request, location_id: str = None):
         "status": "active",
         "end_date": {"$lt": today}
     }
-    expired_count = await _db.memberships.count_documents(expired_query)
-    expired_list = await _db.memberships.find(expired_query, {"_id": 0}).limit(10).to_list(10)
-    
-    for m in expired_list:
-        member = await _db.members.find_one({"member_id": m["member_id"]}, {"_id": 0, "full_name": 1, "member_no": 1})
-        m["member_name"] = member["full_name"] if member else "Unknown"
-        m["member_no"] = member.get("member_no", "") if member else ""
     
     # Payments due (pending payments)
     payments_due_query = {
         "location_id": location_id,
         "status": "pending"
     }
-    payments_due_count = await _db.payments.count_documents(payments_due_query)
-    payments_due_list = await _db.payments.find(payments_due_query, {"_id": 0}).limit(10).to_list(10)
-    
+    (
+        expiring_count,
+        expiring_list,
+        expired_count,
+        expired_list,
+        payments_due_count,
+        payments_due_list,
+    ) = await asyncio.gather(
+        _db.memberships.count_documents(expiring_query),
+        _db.memberships.find(expiring_query, {"_id": 0}).limit(10).to_list(10),
+        _db.memberships.count_documents(expired_query),
+        _db.memberships.find(expired_query, {"_id": 0}).limit(10).to_list(10),
+        _db.payments.count_documents(payments_due_query),
+        _db.payments.find(payments_due_query, {"_id": 0}).limit(10).to_list(10),
+    )
+
+    member_ids = list({
+        *(m.get("member_id") for m in expiring_list if m.get("member_id")),
+        *(m.get("member_id") for m in expired_list if m.get("member_id")),
+        *(p.get("member_id") for p in payments_due_list if p.get("member_id")),
+    })
+    members_by_id = {}
+    if member_ids:
+        members = await _db.members.find(
+            {"member_id": {"$in": member_ids}, "location_id": location_id},
+            {"_id": 0, "member_id": 1, "full_name": 1, "member_no": 1},
+        ).to_list(len(member_ids))
+        members_by_id = {m.get("member_id"): m for m in members if m.get("member_id")}
+
+    for m in expiring_list:
+        member = members_by_id.get(m.get("member_id"))
+        m["member_name"] = member.get("full_name") if member else "Unknown"
+        m["member_no"] = member.get("member_no", "") if member else ""
+
+    for m in expired_list:
+        member = members_by_id.get(m.get("member_id"))
+        m["member_name"] = member.get("full_name") if member else "Unknown"
+        m["member_no"] = member.get("member_no", "") if member else ""
+
     for p in payments_due_list:
-        member = await _db.members.find_one({"member_id": p["member_id"]}, {"_id": 0, "full_name": 1})
-        p["member_name"] = member["full_name"] if member else "Unknown"
+        member = members_by_id.get(p.get("member_id"))
+        p["member_name"] = member.get("full_name") if member else "Unknown"
     
     return {
         "expiring_soon": {"count": expiring_count, "items": expiring_list},

@@ -78,6 +78,26 @@ def _localize_links(items: list, lang: str) -> list:
     return out
 
 
+def _localize_stats(items: list, lang: str) -> list:
+    if not items or lang == DEFAULT_LANGUAGE:
+        return items
+    out = []
+    for item in items:
+        if not isinstance(item, dict):
+            out.append(item)
+            continue
+        translations = item.get("translations", {})
+        if isinstance(translations, dict) and lang in translations:
+            t = translations.get(lang) or {}
+            if isinstance(t, dict) and t.get("label"):
+                merged = item.copy()
+                merged["label"] = t.get("label")
+                out.append(merged)
+                continue
+        out.append(item)
+    return out
+
+
 # ─── Public API Endpoints (No Auth Required) ──────────────────────
 
 @router.get("/public/site-settings")
@@ -146,33 +166,41 @@ async def get_public_site_settings(request: Request):
             localized["header_menu"] = _localize_links(localized.get("header_menu", []), lang)
         if isinstance(localized, dict) and localized.get("footer_quick_links"):
             localized["footer_quick_links"] = _localize_links(localized.get("footer_quick_links", []), lang)
+        if isinstance(localized, dict) and localized.get("custom_stats"):
+            localized["custom_stats"] = _localize_stats(localized.get("custom_stats", []), lang)
     return localized
 
 
 @router.get("/public/branches")
-async def get_public_branches():
+async def get_public_branches(request: Request):
     """Get all public branches/locations"""
+    lang = _get_language(request)
     branches = await _db.locations.find(
         {"is_deleted": False, "status": "active", "is_public": {"$ne": False}},
         {"_id": 0, "location_id": 1, "name": 1, "address": 1, "city": 1, 
          "phone": 1, "email": 1, "public_title": 1, "public_description": 1,
-         "hero_image_path": 1, "operating_hours": 1, "map_embed_url": 1, "logo_url": 1, "slug": 1}
+         "video_section_title": 1, "location_video_path": 1, "location_video_thumbnail_path": 1, "location_video_autoplay": 1,
+         "hero_image_path": 1, "operating_hours": 1, "map_embed_url": 1, "logo_url": 1, "slug": 1, "translations": 1}
     ).to_list(50)
-    return branches
+    localized_fields = ["public_title", "public_description", "video_section_title"]
+    return [_localize_doc(b, lang, localized_fields) for b in branches]
 
 
 @router.get("/public/branches/{identifier}")
-async def get_public_branch(identifier: str):
+async def get_public_branch(identifier: str, request: Request):
     """Get a single public branch by ID or slug"""
+    lang = _get_language(request)
     branch = await _db.locations.find_one(
         {"$or": [{"location_id": identifier}, {"slug": identifier}], "is_deleted": False, "status": "active", "is_public": {"$ne": False}},
         {"_id": 0, "location_id": 1, "name": 1, "address": 1, "city": 1, "country": 1,
          "phone": 1, "email": 1, "public_title": 1, "public_description": 1,
-         "hero_image_path": 1, "operating_hours": 1, "map_embed_url": 1, "amenities": 1, "logo_url": 1, "slug": 1, "gallery_images": 1}
+         "video_section_title": 1, "location_video_path": 1, "location_video_thumbnail_path": 1, "location_video_autoplay": 1,
+         "hero_image_path": 1, "operating_hours": 1, "map_embed_url": 1, "amenities": 1, "logo_url": 1, "slug": 1, "gallery_images": 1, "translations": 1}
     )
     if not branch:
         raise HTTPException(404, "Branch not found")
-    return branch
+    localized_fields = ["public_title", "public_description", "video_section_title"]
+    return _localize_doc(branch, lang, localized_fields)
 
 
 @router.get("/public/disciplines")
@@ -510,6 +538,72 @@ async def get_google_reviews(request: Request):
         if cache:
             return {"reviews": cache.get("reviews", []), "rating": cache.get("rating", 0), "total_reviews": cache.get("total_reviews", 0)}
         return {"reviews": [], "rating": 0, "total_reviews": 0}
+
+
+@router.get("/public/branches/{identifier}/google-reviews")
+async def get_branch_google_reviews(identifier: str, request: Request):
+    import httpx
+    from datetime import timedelta
+
+    branch = await _db.locations.find_one(
+        {"$or": [{"location_id": identifier}, {"slug": identifier}], "is_deleted": False, "status": "active", "is_public": {"$ne": False}},
+        {"_id": 0, "google_place_id": 1, "google_location_name": 1, "google_reviews_enabled": 1}
+    )
+
+    place_id = (branch or {}).get("google_place_id")
+    enabled = bool((branch or {}).get("google_reviews_enabled"))
+    place_name = (branch or {}).get("google_location_name") or ""
+
+    if not enabled or not place_id:
+        return {"enabled": False, "place_name": place_name, "reviews": [], "rating": 0, "total_reviews": 0}
+
+    settings = await _db.site_settings.find_one({"setting_id": "global"}, {"_id": 0})
+    api_key = (settings or {}).get("google_reviews_api_key")
+    if not api_key:
+        return {"enabled": True, "place_name": place_name, "reviews": [], "rating": 0, "total_reviews": 0}
+
+    cache = await _db.google_reviews_cache.find_one({"place_id": place_id}, {"_id": 0})
+    now = datetime.now(timezone.utc)
+    if cache and cache.get("fetched_at"):
+        fetched = cache["fetched_at"]
+        if isinstance(fetched, str):
+            fetched = datetime.fromisoformat(fetched.replace("Z", "+00:00"))
+        if (now - fetched) < timedelta(hours=6):
+            return {
+                "enabled": True,
+                "place_name": place_name,
+                "reviews": cache.get("reviews", []),
+                "rating": cache.get("rating", 0),
+                "total_reviews": cache.get("total_reviews", 0),
+            }
+
+    try:
+        url = f"https://maps.googleapis.com/maps/api/place/details/json?place_id={place_id}&fields=reviews,rating,user_ratings_total&key={api_key}"
+        async with httpx.AsyncClient() as client:
+            resp = await client.get(url, timeout=10)
+            data = resp.json()
+
+        result = data.get("result", {})
+        reviews = result.get("reviews", [])
+        rating = result.get("rating", 0)
+        total_reviews = result.get("user_ratings_total", 0)
+
+        await _db.google_reviews_cache.update_one(
+            {"place_id": place_id},
+            {"$set": {"place_id": place_id, "reviews": reviews, "rating": rating, "total_reviews": total_reviews, "fetched_at": now.isoformat()}},
+            upsert=True
+        )
+        return {"enabled": True, "place_name": place_name, "reviews": reviews, "rating": rating, "total_reviews": total_reviews}
+    except Exception:
+        if cache:
+            return {
+                "enabled": True,
+                "place_name": place_name,
+                "reviews": cache.get("reviews", []),
+                "rating": cache.get("rating", 0),
+                "total_reviews": cache.get("total_reviews", 0),
+            }
+        return {"enabled": True, "place_name": place_name, "reviews": [], "rating": 0, "total_reviews": 0}
 
 
 @router.get("/public/gallery")

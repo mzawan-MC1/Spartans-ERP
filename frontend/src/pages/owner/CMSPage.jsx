@@ -22,44 +22,11 @@ import {
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 import { ActionTooltip } from '@/components/ui/tooltip';
-
-const CMS_LANGS = [
-  { code: 'en', label: 'English', short: 'EN' },
-  { code: 'ar', label: 'Arabic', short: 'AR' },
-  { code: 'fr', label: 'French', short: 'FR' },
-  { code: 'ru', label: 'Russian', short: 'RU' },
-];
+import LanguageTabs from '@/components/cms/LanguageTabs';
+import { CMS_LANGS } from '@/lib/cmsLanguages';
 
 function isNonEmptyText(v) {
   return typeof v === 'string' && v.trim().length > 0;
-}
-
-function LanguageTabs({ value, onValueChange, statusByLang = {}, className = '' }) {
-  return (
-    <div className={`inline-flex items-center gap-1 rounded-full bg-zinc-950 border border-zinc-800 p-1 ${className}`}>
-      {CMS_LANGS.map((l) => {
-        const active = value === l.code;
-        const status = statusByLang[l.code];
-        return (
-          <button
-            key={l.code}
-            type="button"
-            onClick={() => onValueChange(l.code)}
-            className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold uppercase tracking-wider transition-colors ${
-              active ? 'bg-red-600 text-white' : 'text-zinc-300 hover:text-white hover:bg-zinc-900'
-            }`}
-          >
-            <span>{l.short}</span>
-            {status === 'complete' ? (
-              <Check className="w-3.5 h-3.5 text-white/90" />
-            ) : status === 'incomplete' ? (
-              <span className="text-amber-300 text-xs leading-none">⚠</span>
-            ) : null}
-          </button>
-        );
-      })}
-    </div>
-  );
 }
 
 export default function CMSPage() {
@@ -716,6 +683,7 @@ function SiteSettingsTab({ settings, onSave, saving }) {
     social_links: settings?.social_links || {}
   });
   const [contentLang, setContentLang] = useState('en');
+  const [statsLang, setStatsLang] = useState('en');
   const [i18nForm, setI18nForm] = useState({
     ar: { site_name: '', tagline: '', description: '', video_section_title: '', hero_primary_cta_text: '', hero_primary_cta_url: '', hero_secondary_cta_text: '', hero_secondary_cta_url: '' },
     fr: { site_name: '', tagline: '', description: '', video_section_title: '', hero_primary_cta_text: '', hero_primary_cta_url: '', hero_secondary_cta_text: '', hero_secondary_cta_url: '' },
@@ -798,6 +766,38 @@ function SiteSettingsTab({ settings, onSave, saving }) {
       [contentLang]: { ...(i18nForm?.[contentLang] || {}), [key]: value },
     });
   };
+
+  const getStatLabel = (stat) => {
+    if (!stat || typeof stat !== 'object') return '';
+    if (statsLang === 'en') return stat.label || '';
+    return stat?.translations?.[statsLang]?.label || '';
+  };
+
+  const setStatLabel = (idx, value) => {
+    const newStats = [...(form.custom_stats || [])];
+    const current = newStats[idx] || {};
+    if (statsLang === 'en') {
+      newStats[idx] = { ...current, label: value };
+    } else {
+      newStats[idx] = {
+        ...current,
+        translations: {
+          ...(current.translations || {}),
+          [statsLang]: { ...(current.translations?.[statsLang] || {}), label: value },
+        },
+      };
+    }
+    setForm({ ...form, custom_stats: newStats });
+  };
+
+  const statsStatusByLang = CMS_LANGS.reduce((acc, l) => {
+    const list = form.custom_stats || [];
+    const isComplete = list.length === 0
+      ? true
+      : list.every((s) => isNonEmptyText(l.code === 'en' ? (s?.label || '') : (s?.translations?.[l.code]?.label || '')));
+    acc[l.code] = isComplete ? 'complete' : 'incomplete';
+    return acc;
+  }, {});
 
   const settingsRequiredKeys = ['site_name', 'tagline', 'description'];
   const settingsStatusByLang = CMS_LANGS.reduce((acc, l) => {
@@ -1025,7 +1025,10 @@ function SiteSettingsTab({ settings, onSave, saving }) {
 
         {/* Custom Stats / Tiles */}
         <div className="md:col-span-2 border-t border-zinc-800 pt-6 mt-2">
-          <h3 className="font-heading font-bold text-white text-md mb-2">Stats / Tiles</h3>
+          <div className="flex items-center justify-between gap-4 mb-2">
+            <h3 className="font-heading font-bold text-white text-md">Stats / Tiles</h3>
+            <LanguageTabs value={statsLang} onValueChange={setStatsLang} statusByLang={statsStatusByLang} />
+          </div>
           <p className="text-zinc-600 text-xs mb-4">Overrides auto-calculated stats if provided. Add tiles to display on the landing page.</p>
           
           <div className="space-y-3">
@@ -1049,12 +1052,8 @@ function SiteSettingsTab({ settings, onSave, saving }) {
                   <label className="block text-zinc-400 text-xs mb-1">Label</label>
                   <input
                     type="text"
-                    value={stat.label}
-                    onChange={(e) => {
-                      const newStats = [...(form.custom_stats || [])];
-                      newStats[idx] = { ...newStats[idx], label: e.target.value };
-                      setForm({ ...form, custom_stats: newStats });
-                    }}
+                    value={getStatLabel(stat)}
+                    onChange={(e) => setStatLabel(idx, e.target.value)}
                     className="w-full bg-zinc-900 border border-zinc-700 text-white px-3 py-1.5 rounded-sm text-sm"
                     placeholder="e.g. Locations"
                   />
@@ -1925,6 +1924,31 @@ function BlogsTab() {
   });
   const [tagInput, setTagInput] = useState('');
 
+  const normalizeBlogTranslations = (translations) => {
+    if (!translations || typeof translations !== 'object' || Array.isArray(translations)) return {};
+    const out = {};
+    for (const [lang, raw] of Object.entries(translations)) {
+      if (!raw) {
+        out[lang] = {};
+        continue;
+      }
+      if (typeof raw === 'string') {
+        out[lang] = { content_html: raw };
+        continue;
+      }
+      if (typeof raw !== 'object' || Array.isArray(raw)) continue;
+      out[lang] = {
+        title: raw.title ?? undefined,
+        content_html: raw.content_html ?? undefined,
+        excerpt: raw.excerpt ?? undefined,
+        seo_title: raw.seo_title ?? undefined,
+        seo_description: raw.seo_description ?? undefined,
+        seo_keywords: raw.seo_keywords ?? undefined,
+      };
+    }
+    return out;
+  };
+
   useEffect(() => {
     (async () => {
       try {
@@ -1947,7 +1971,7 @@ function BlogsTab() {
       title: b.title, slug: b.slug, content_html: b.content_html || '', excerpt: b.excerpt || '',
       featured_image: b.featured_image || '', tags: b.tags || [], status: b.status || 'draft', is_featured: b.is_featured || false,
       seo_title: b.seo_title || '', seo_description: b.seo_description || '', seo_keywords: b.seo_keywords || '', og_image: b.og_image || '',
-      translations: b.translations || {},
+      translations: normalizeBlogTranslations(b.translations),
     });
     setDialog({ open: true, data: b });
   };
@@ -1975,17 +1999,24 @@ function BlogsTab() {
     if (!form.title.trim()) { toast.error('Title is required'); return; }
     setSaving(true);
     try {
+      const translations = {};
+      for (const l of CMS_LANGS) {
+        if (l.code === 'en') continue;
+        const normalized = normalizeBlogTranslations(form.translations);
+        translations[l.code] = normalized[l.code] || {};
+      }
+      const payload = { ...form, translations };
       if (dialog.data) {
-        const res = await blogsAPI.update(dialog.data.blog_id, form);
+        const res = await blogsAPI.update(dialog.data.blog_id, payload);
         setBlogs(blogs.map(b => b.blog_id === dialog.data.blog_id ? res.data : b));
         toast.success('Blog updated');
       } else {
-        const res = await blogsAPI.create(form);
+        const res = await blogsAPI.create(payload);
         setBlogs([res.data, ...blogs]);
         toast.success('Blog created');
       }
       setDialog({ open: false, data: null });
-    } catch { toast.error('Failed to save blog'); }
+    } catch (err) { toast.error(err?.response?.data?.detail || 'Failed to save blog'); }
     finally { setSaving(false); }
   };
 

@@ -47,7 +47,7 @@ export default function BranchesPage() {
     <PublicLayout siteSettings={siteSettings}>
       {/* Hero */}
       <section className="bg-black text-white py-16 lg:py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto w-full px-4 sm:px-6 lg:w-[calc(100%-200px)] lg:px-0">
           <nav className="flex items-center gap-2 text-sm text-gray-400 mb-6">
             <Link to="/" className="hover:text-white">{t('nav.home')}</Link>
             <ChevronRight className="w-4 h-4" />
@@ -64,7 +64,7 @@ export default function BranchesPage() {
 
       {/* Branches List */}
       <section data-testid="branches-list" className="py-16 lg:py-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto w-full px-4 sm:px-6 lg:w-[calc(100%-200px)] lg:px-0">
           {branches.length === 0 ? (
             <div className="text-center py-16">
               <MapPin className="w-16 h-16 text-gray-300 mx-auto mb-4" />
@@ -168,7 +168,7 @@ export default function BranchesPage() {
 
       {/* CTA */}
       <section className="bg-gray-50 py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <div className="mx-auto w-full px-4 sm:px-6 lg:w-[calc(100%-200px)] lg:px-0 text-center">
           <h2 className="font-heading font-bold text-2xl text-black">{t('branches.cantFind.title')}</h2>
           <p className="text-gray-600 mt-2">{t('branches.cantFind.subtitle')}</p>
           <Link

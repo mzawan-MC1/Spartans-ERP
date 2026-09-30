@@ -965,16 +965,34 @@ async def list_attendance(request: Request, session_id: Optional[str] = None,
 async def attendance_summary(request: Request):
     user = await _get_current_user(request)
     lid = await get_location_context(user, request)
-    total = await _db.attendance_records.count_documents({"location_id": lid})
-    present = await _db.attendance_records.count_documents({"location_id": lid, "status": "present"})
-    absent = await _db.attendance_records.count_documents({"location_id": lid, "status": "absent"})
-    late = await _db.attendance_records.count_documents({"location_id": lid, "status": "late"})
-    programs = await _db.programs.find({"location_id": lid, "is_active": True}, {"_id": 0, "program_id": 1, "name": 1}).to_list(50)
+    import asyncio
+    total, present, absent, late, programs = await asyncio.gather(
+        _db.attendance_records.count_documents({"location_id": lid}),
+        _db.attendance_records.count_documents({"location_id": lid, "status": "present"}),
+        _db.attendance_records.count_documents({"location_id": lid, "status": "absent"}),
+        _db.attendance_records.count_documents({"location_id": lid, "status": "late"}),
+        _db.programs.find({"location_id": lid, "is_active": True}, {"_id": 0, "program_id": 1, "name": 1}).to_list(50),
+    )
+
+    program_ids = [p.get("program_id") for p in programs if p.get("program_id")]
+    counts_by_program = {}
+    if program_ids:
+        agg = await _db.attendance_records.aggregate([
+            {"$match": {"location_id": lid, "program_id": {"$in": program_ids}}},
+            {"$group": {
+                "_id": "$program_id",
+                "total": {"$sum": 1},
+                "present": {"$sum": {"$cond": [{"$eq": ["$status", "present"]}, 1, 0]}},
+            }},
+        ]).to_list(len(program_ids))
+        counts_by_program = {a.get("_id"): a for a in agg if a.get("_id")}
+
     per_program = []
     for p in programs:
-        count = await _db.attendance_records.count_documents({"location_id": lid, "program_id": p["program_id"]})
-        present_count = await _db.attendance_records.count_documents({"location_id": lid, "program_id": p["program_id"], "status": "present"})
-        per_program.append({"program_id": p["program_id"], "name": p["name"], "total": count, "present": present_count})
+        pid = p.get("program_id")
+        info = counts_by_program.get(pid) or {}
+        per_program.append({"program_id": pid, "name": p.get("name", ""), "total": int(info.get("total", 0)), "present": int(info.get("present", 0))})
+
     return {"total": total, "present": present, "absent": absent, "late": late, "per_program": per_program}
 
 
@@ -986,23 +1004,27 @@ async def manager_stats(request: Request):
     if user.get("role") == "CUSTOMER" or user.get("role") == "MEMBER":
         raise HTTPException(403, "Staff access required")
     lid = await get_location_context(user, request)
-    total_programs = await _db.programs.count_documents({"location_id": lid, "is_active": True})
-    active_categories = await _db.program_categories.count_documents({"location_id": lid, "is_active": True})
-    active_instructors = await _db.instructors.count_documents({"location_id": lid, "is_active": True})
+    import asyncio
+    total_programs, active_categories, active_instructors = await asyncio.gather(
+        _db.programs.count_documents({"location_id": lid, "is_active": True}),
+        _db.program_categories.count_documents({"location_id": lid, "is_active": True}),
+        _db.instructors.count_documents({"location_id": lid, "is_active": True}),
+    )
     today = date.today()
     week_start = today - timedelta(days=today.weekday())
     week_end = week_start + timedelta(days=6)
-    classes_this_week = await _db.class_sessions.count_documents({
-        "location_id": lid,
-        "start_date_time": {"$gte": week_start.isoformat(), "$lte": week_end.isoformat() + "T23:59:59"},
-        "status": {"$ne": "cancelled"}
-    })
-    # Count active members from the members collection (not users with CUSTOMER role)
-    total_customers = await _db.members.count_documents({
-        "location_id": lid, 
-        "is_active": True,
-        "$or": [{"deleted_at": None}, {"deleted_at": {"$exists": False}}]
-    })
+    classes_this_week, total_customers = await asyncio.gather(
+        _db.class_sessions.count_documents({
+            "location_id": lid,
+            "start_date_time": {"$gte": week_start.isoformat(), "$lte": week_end.isoformat() + "T23:59:59"},
+            "status": {"$ne": "cancelled"}
+        }),
+        _db.members.count_documents({
+            "location_id": lid, 
+            "is_active": True,
+            "$or": [{"deleted_at": None}, {"deleted_at": {"$exists": False}}]
+        }),
+    )
     return {
         "total_programs": total_programs, "active_categories": active_categories,
         "active_instructors": active_instructors, "classes_this_week": classes_this_week,
@@ -1030,20 +1052,25 @@ async def location_overview(location_id: str, request: Request):
     
     # Count active, non-deleted items
     base_filter = {"location_id": location_id, "is_active": True, "$or": [{"deleted_at": None}, {"deleted_at": {"$exists": False}}]}
-    categories = await _db.program_categories.count_documents(base_filter)
-    programs = await _db.programs.count_documents(base_filter)
-    instructors = await _db.instructors.count_documents(base_filter)
+    import asyncio
+    categories, programs, instructors = await asyncio.gather(
+        _db.program_categories.count_documents(base_filter),
+        _db.programs.count_documents(base_filter),
+        _db.instructors.count_documents(base_filter),
+    )
     
     today = date.today()
     week_start = today - timedelta(days=today.weekday())
     week_end = week_start + timedelta(days=6)
-    upcoming = await _db.class_sessions.count_documents({
-        "location_id": location_id,
-        "start_date_time": {"$gte": week_start.isoformat(), "$lte": week_end.isoformat() + "T23:59:59"},
-        "status": {"$ne": "cancelled"}
-    })
-    total_attendance = await _db.attendance_records.count_documents({"location_id": location_id})
-    present_count = await _db.attendance_records.count_documents({"location_id": location_id, "status": "present"})
+    upcoming, total_attendance, present_count = await asyncio.gather(
+        _db.class_sessions.count_documents({
+            "location_id": location_id,
+            "start_date_time": {"$gte": week_start.isoformat(), "$lte": week_end.isoformat() + "T23:59:59"},
+            "status": {"$ne": "cancelled"}
+        }),
+        _db.attendance_records.count_documents({"location_id": location_id}),
+        _db.attendance_records.count_documents({"location_id": location_id, "status": "present"}),
+    )
     return {
         "categories": categories, "programs": programs, "instructors": instructors,
         "upcoming_sessions": upcoming, "total_attendance": total_attendance,

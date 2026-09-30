@@ -44,7 +44,6 @@ const TABS = [
   { key: 'programs', label: 'Programs', icon: BookOpen },
   { key: 'schedule', label: 'Schedule', icon: Calendar },
   { key: 'attendance', label: 'Attendance', icon: ClipboardCheck },
-  { key: 'attendance', label: 'Attendance', icon: ClipboardCheck },
   { key: 'cms', label: 'Location CMS', icon: Settings },
   { key: 'instructors', label: 'Instructors', icon: Users },
 ];

@@ -120,7 +120,7 @@ class SiteSettingsUpdate(BaseModel):
     video_thumbnail: Optional[str] = None
     video_autoplay: Optional[bool] = None
     # Custom Stats Tiles
-    custom_stats: Optional[List[Dict[str, str]]] = None
+    custom_stats: Optional[List[Dict[str, Any]]] = None
     contact_email: Optional[str] = None
     contact_phone: Optional[str] = None
     contact_address: Optional[str] = None
@@ -142,7 +142,7 @@ class SiteSettingsUpdate(BaseModel):
     # Footer settings
     footer_logo_url: Optional[str] = None
     footer_description: Optional[str] = None
-    footer_quick_links: Optional[List[Dict[str, str]]] = None
+    footer_quick_links: Optional[List[Dict[str, Any]]] = None
     footer_contact: Optional[Dict[str, str]] = None
     # Google Reviews
     google_place_id: Optional[str] = None
@@ -803,15 +803,29 @@ async def delete_page(page_id: str, request: Request, permanent: bool = False):
 
 # ─── Branch Public Settings ───────────────────────────────────────
 
+class BranchTranslations(BaseModel):
+    public_title: Optional[str] = None
+    public_description: Optional[str] = None
+    video_section_title: Optional[str] = None
+
+
 class BranchPublicUpdate(BaseModel):
     is_public: Optional[bool] = None
     public_title: Optional[str] = None
     public_description: Optional[str] = None
+    video_section_title: Optional[str] = None
+    google_place_id: Optional[str] = None
+    google_location_name: Optional[str] = None
+    google_reviews_enabled: Optional[bool] = None
     hero_image_path: Optional[str] = None
     operating_hours: Optional[str] = None
     map_embed_url: Optional[str] = None
     amenities: Optional[List[str]] = None
     gallery_images: Optional[List[dict]] = None
+    location_video_path: Optional[str] = None
+    location_video_thumbnail_path: Optional[str] = None
+    location_video_autoplay: Optional[bool] = None
+    translations: Optional[Dict[str, BranchTranslations]] = None
 
 
 @router.patch("/admin/branches/{location_id}/public")
@@ -829,7 +843,21 @@ async def update_branch_public(location_id: str, data: BranchPublicUpdate, reque
     if not loc:
         raise HTTPException(404, "Location not found or access denied")
     
-    updates = {k: v for k, v in data.model_dump().items() if v is not None}
+    updates = {}
+    for k, v in data.model_dump().items():
+        if v is None:
+            continue
+        if k == "translations":
+            merged = loc.get("translations", {})
+            for lang, trans in v.items():
+                trans_dict = {tk: tv for tk, tv in trans.items() if tv is not None} if isinstance(trans, dict) else trans
+                if lang in merged and isinstance(merged.get(lang), dict):
+                    merged[lang].update(trans_dict)
+                else:
+                    merged[lang] = trans_dict
+            updates["translations"] = merged
+        else:
+            updates[k] = v
     
     # Manager restrictions: Managers can't toggle is_public
     if user["role"] != "OWNER" and "is_public" in updates:

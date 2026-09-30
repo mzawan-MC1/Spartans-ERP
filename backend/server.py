@@ -19,6 +19,8 @@ import jwt
 import httpx
 import aiofiles
 import bcrypt as bcrypt_lib
+import time
+from typing import Dict, Any, Tuple
 
 class CustomPwdContext:
     def hash(self, password: str) -> str:
@@ -89,6 +91,8 @@ async def lifespan(app: FastAPI):
         logger.error("DB connection failed: %s", str(e))
         raise
 
+    await ensure_indexes(db)
+
     logger.info("Starting up background tasks...")
     import asyncio
     import recurring_payments
@@ -113,6 +117,118 @@ logger = logging.getLogger(__name__)
 # Security logger for audit trail
 security_logger = logging.getLogger("security_audit")
 security_logger.setLevel(logging.WARNING)
+
+SLOW_API_MS = int(os.environ.get("SLOW_API_MS", "500"))
+
+
+async def ensure_indexes(database):
+    specs: List[Tuple[str, List[Tuple[str, int]], Dict[str, Any]]] = [
+        ("users", [("user_id", 1)], {}),
+        ("users", [("email", 1)], {}),
+        ("users", [("role", 1)], {}),
+        ("users", [("location_id", 1)], {}),
+        ("users", [("employee_location_id", 1)], {}),
+        ("users", [("created_at", -1)], {}),
+
+        ("staff", [("staff_id", 1)], {}),
+        ("staff", [("location_id", 1)], {}),
+        ("staff", [("role", 1)], {}),
+        ("staff", [("created_at", -1)], {}),
+
+        ("members", [("member_id", 1)], {}),
+        ("members", [("location_id", 1)], {}),
+        ("members", [("status", 1)], {}),
+        ("members", [("created_at", -1)], {}),
+        ("members", [("location_id", 1), ("created_at", -1)], {}),
+
+        ("memberships", [("membership_id", 1)], {}),
+        ("memberships", [("member_id", 1)], {}),
+        ("memberships", [("location_id", 1)], {}),
+        ("memberships", [("status", 1)], {}),
+        ("memberships", [("payment_status", 1)], {}),
+        ("memberships", [("created_at", -1)], {}),
+        ("memberships", [("end_date", 1)], {}),
+        ("memberships", [("location_id", 1), ("created_at", -1)], {}),
+        ("memberships", [("member_id", 1), ("created_at", -1)], {}),
+
+        ("payments", [("payment_id", 1)], {}),
+        ("payments", [("member_id", 1)], {}),
+        ("payments", [("membership_id", 1)], {}),
+        ("payments", [("location_id", 1)], {}),
+        ("payments", [("status", 1)], {}),
+        ("payments", [("payment_status", 1)], {}),
+        ("payments", [("created_at", -1)], {}),
+        ("payments", [("date", -1)], {}),
+        ("payments", [("location_id", 1), ("created_at", -1)], {}),
+        ("payments", [("location_id", 1), ("status", 1), ("created_at", -1)], {}),
+        ("payments", [("member_id", 1), ("created_at", -1)], {}),
+
+        ("attendance_records", [("location_id", 1)], {}),
+        ("attendance_records", [("member_id", 1)], {}),
+        ("attendance_records", [("program_id", 1)], {}),
+        ("attendance_records", [("date", -1)], {}),
+        ("attendance_records", [("location_id", 1), ("date", -1)], {}),
+        ("attendance_records", [("program_id", 1), ("date", -1)], {}),
+        ("attendance_records", [("member_id", 1), ("date", -1)], {}),
+        ("attendance_records", [("attendance_date_time", -1)], {}),
+        ("attendance_records", [("location_id", 1), ("attendance_date_time", -1)], {}),
+        ("attendance_records", [("program_id", 1), ("attendance_date_time", -1)], {}),
+        ("attendance_records", [("member_id", 1), ("attendance_date_time", -1)], {}),
+
+        ("sales_leads", [("location_id", 1)], {}),
+        ("sales_leads", [("status", 1)], {}),
+        ("sales_leads", [("created_at", -1)], {}),
+        ("sales_leads", [("location_id", 1), ("created_at", -1)], {}),
+        ("sales_leads", [("agent_id", 1), ("created_at", -1)], {}),
+        ("sales_leads", [("team_id", 1), ("created_at", -1)], {}),
+
+        ("sales_transactions", [("location_id", 1)], {}),
+        ("sales_transactions", [("created_at", -1)], {}),
+        ("sales_transactions", [("payment_status", 1)], {}),
+        ("sales_transactions", [("location_id", 1), ("created_at", -1)], {}),
+        ("sales_transactions", [("member_id", 1), ("created_at", -1)], {}),
+
+        ("payroll_records", [("location_id", 1)], {}),
+        ("payroll_records", [("staff_id", 1)], {}),
+        ("payroll_records", [("user_id", 1)], {}),
+        ("payroll_records", [("date", -1)], {}),
+        ("payroll_records", [("created_at", -1)], {}),
+        ("payroll_records", [("location_id", 1), ("date", -1)], {}),
+        ("payroll_records", [("period_start", 1)], {}),
+        ("payroll_records", [("period_end", 1)], {}),
+        ("payroll_records", [("location_id", 1), ("period_start", 1), ("period_end", 1)], {}),
+
+        ("expenses", [("location_id", 1)], {}),
+        ("expenses", [("date", -1)], {}),
+        ("expenses", [("created_at", -1)], {}),
+        ("expenses", [("location_id", 1), ("date", -1)], {}),
+    ]
+
+    for collection, keys, kwargs in specs:
+        try:
+            await database[collection].create_index(keys, background=True, **kwargs)
+        except Exception as e:
+            logger.warning("Index create failed on %s %s: %s", collection, keys, str(e))
+
+
+@app.middleware("http")
+async def slow_request_logger(request: Request, call_next):
+    started = time.perf_counter()
+    status_code = 500
+    try:
+        response = await call_next(request)
+        status_code = response.status_code
+        return response
+    finally:
+        elapsed_ms = (time.perf_counter() - started) * 1000.0
+        if elapsed_ms >= float(SLOW_API_MS):
+            logger.warning(
+                "SLOW_API %s %s %s %.1fms",
+                request.method,
+                request.url.path,
+                status_code,
+                elapsed_ms,
+            )
 
 # ─── Pydantic Models ───────────────────────────────────────────────
 
@@ -643,10 +759,13 @@ async def get_dashboard_stats(request: Request):
         raise HTTPException(status_code=403, detail="Owner access only")
     
     owner_id = user["user_id"] if user.get("role") == "OWNER" else user.get("owner_id")
-    total_locations = await db.locations.count_documents({"owner_id": owner_id, "is_deleted": False})
-    active_locations = await db.locations.count_documents({"owner_id": owner_id, "is_deleted": False, "status": "active"})
-    total_managers = await db.users.count_documents({"owner_id": owner_id, "role": "LOCATION_MANAGER", "is_active": True})
-    total_customers = await db.users.count_documents({"owner_id": owner_id, "role": "CUSTOMER", "is_active": True})
+    import asyncio
+    total_locations, active_locations, total_managers, total_customers = await asyncio.gather(
+        db.locations.count_documents({"owner_id": owner_id, "is_deleted": False}),
+        db.locations.count_documents({"owner_id": owner_id, "is_deleted": False, "status": "active"}),
+        db.users.count_documents({"owner_id": owner_id, "role": "LOCATION_MANAGER", "is_active": True}),
+        db.users.count_documents({"owner_id": owner_id, "role": "CUSTOMER", "is_active": True}),
+    )
     
     return {
         "total_locations": total_locations,
@@ -671,32 +790,35 @@ async def get_owner_analytics(request: Request):
     month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0).isoformat()
     
     # ── Key Metrics ──
-    total_active_members = await db.users.count_documents({
-        "owner_id": owner_id, "role": "CUSTOMER", "is_active": True,
-        "$or": [{"deleted_at": None}, {"deleted_at": {"$exists": False}}]
-    })
-    new_members_this_month = await db.users.count_documents({
-        "owner_id": owner_id, "role": "CUSTOMER",
-        "created_at": {"$gte": month_start},
-        "$or": [{"deleted_at": None}, {"deleted_at": {"$exists": False}}]
-    })
+    import asyncio
+    total_active_members, new_members_this_month, loc_rows = await asyncio.gather(
+        db.users.count_documents({
+            "owner_id": owner_id, "role": "CUSTOMER", "is_active": True,
+            "$or": [{"deleted_at": None}, {"deleted_at": {"$exists": False}}]
+        }),
+        db.users.count_documents({
+            "owner_id": owner_id, "role": "CUSTOMER",
+            "created_at": {"$gte": month_start},
+            "$or": [{"deleted_at": None}, {"deleted_at": {"$exists": False}}]
+        }),
+        db.locations.find({"owner_id": owner_id, "is_deleted": False}, {"_id": 0, "location_id": 1}).to_list(5000),
+    )
+    location_ids = [loc.get("location_id") for loc in (loc_rows or []) if loc.get("location_id")]
     
-    location_ids = [loc["location_id"] async for loc in db.locations.find(
-        {"owner_id": owner_id, "is_deleted": False}, {"location_id": 1}
-    )]
-    
-    total_instructors = await db.instructors.count_documents({
-        "location_id": {"$in": location_ids}, "is_active": True,
-        "$or": [{"deleted_at": None}, {"deleted_at": {"$exists": False}}]
-    })
-    total_programs = await db.programs.count_documents({
-        "location_id": {"$in": location_ids}, "is_active": True,
-        "$or": [{"deleted_at": None}, {"deleted_at": {"$exists": False}}]
-    })
-    total_active_schedules = await db.class_schedules.count_documents({
-        "location_id": {"$in": location_ids}, "is_active": True,
-        "$or": [{"deleted_at": None}, {"deleted_at": {"$exists": False}}]
-    })
+    total_instructors, total_programs, total_active_schedules = await asyncio.gather(
+        db.instructors.count_documents({
+            "location_id": {"$in": location_ids}, "is_active": True,
+            "$or": [{"deleted_at": None}, {"deleted_at": {"$exists": False}}]
+        }) if location_ids else asyncio.sleep(0, result=0),
+        db.programs.count_documents({
+            "location_id": {"$in": location_ids}, "is_active": True,
+            "$or": [{"deleted_at": None}, {"deleted_at": {"$exists": False}}]
+        }) if location_ids else asyncio.sleep(0, result=0),
+        db.class_schedules.count_documents({
+            "location_id": {"$in": location_ids}, "is_active": True,
+            "$or": [{"deleted_at": None}, {"deleted_at": {"$exists": False}}]
+        }) if location_ids else asyncio.sleep(0, result=0),
+    )
     
     # Monthly Revenue (payroll + expenses)
     payroll_pipeline = [
@@ -1266,7 +1388,7 @@ async def get_upload(filename: str):
     mime_type, _ = mimetypes.guess_type(str(file_path))
     if not mime_type:
         mime_type = "application/octet-stream"
-    return FileResponse(path=str(file_path), media_type=mime_type)
+    return FileResponse(path=str(file_path), media_type=mime_type, headers={"Accept-Ranges": "bytes"})
 
 @api_router.get("/health")
 async def health():

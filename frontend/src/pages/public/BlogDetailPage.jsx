@@ -84,7 +84,7 @@ export default function BlogDetailPage() {
           )}
 
           <div
-            className="prose prose-lg max-w-none text-gray-700 text-justify break-words whitespace-normal blog-content"
+            className="prose prose-lg max-w-none text-gray-700 break-words whitespace-normal public-richtext blog-content"
             dangerouslySetInnerHTML={{ __html: blog.content_html }}
             data-testid="blog-content"
           />

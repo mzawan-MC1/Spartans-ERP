@@ -70,33 +70,51 @@ async def customer_dashboard(request: Request):
     now_iso = datetime.now(timezone.utc).isoformat()
     month_start = date.today().replace(day=1).isoformat()
 
-    upcoming_bookings = await _db.bookings.find(
-        {"customer_id": cid, "location_id": lid, "status": "BOOKED",
-         "session_start": {"$gte": now_iso}},
-        {"_id": 0}
-    ).sort("session_start", 1).to_list(50)
-
-    attended_this_month = await _db.attendance_records.count_documents(
-        {"customer_id": cid, "location_id": lid, "status": "present",
-         "attendance_date_time": {"$gte": month_start}}
-    )
-
-    total_attended = await _db.attendance_records.count_documents(
-        {"customer_id": cid, "location_id": lid, "status": "present"}
+    import asyncio
+    upcoming_bookings, attended_this_month, total_attended = await asyncio.gather(
+        _db.bookings.find(
+            {"customer_id": cid, "location_id": lid, "status": "BOOKED",
+             "session_start": {"$gte": now_iso}},
+            {"_id": 0}
+        ).sort("session_start", 1).to_list(50),
+        _db.attendance_records.count_documents(
+            {"customer_id": cid, "location_id": lid, "status": "present",
+             "attendance_date_time": {"$gte": month_start}}
+        ),
+        _db.attendance_records.count_documents(
+            {"customer_id": cid, "location_id": lid, "status": "present"}
+        ),
     )
 
     # Enrich next 3 upcoming with session/program details
     next_3 = []
-    for b in upcoming_bookings[:3]:
-        session = await _db.class_sessions.find_one({"session_id": b["session_id"]}, {"_id": 0})
-        prog = await _db.programs.find_one({"program_id": b.get("program_id", session.get("program_id") if session else "")}, {"_id": 0, "name": 1}) if session else None
-        inst = await _db.instructors.find_one({"instructor_id": session.get("instructor_id", "")}, {"_id": 0, "full_name": 1}) if session else None
-        next_3.append({
-            **b,
-            "program_name": prog["name"] if prog else "Unknown",
-            "instructor_name": inst["full_name"] if inst else "TBD",
-            "room": session.get("room", "") if session else "",
-        })
+    sample = upcoming_bookings[:3]
+    if sample:
+        session_ids = [b.get("session_id") for b in sample if b.get("session_id")]
+        sessions = await _db.class_sessions.find({"session_id": {"$in": session_ids}}, {"_id": 0}).to_list(len(session_ids))
+        sessions_by_id = {s.get("session_id"): s for s in sessions if s.get("session_id")}
+
+        program_ids = list({(b.get("program_id") or sessions_by_id.get(b.get("session_id"), {}).get("program_id")) for b in sample if (b.get("program_id") or sessions_by_id.get(b.get("session_id"), {}).get("program_id"))})
+        instructor_ids = list({sessions_by_id.get(b.get("session_id"), {}).get("instructor_id") for b in sample if sessions_by_id.get(b.get("session_id"), {}).get("instructor_id")})
+
+        programs_task = _db.programs.find({"program_id": {"$in": program_ids}}, {"_id": 0, "program_id": 1, "name": 1}).to_list(len(program_ids)) if program_ids else asyncio.sleep(0, result=[])
+        instructors_task = _db.instructors.find({"instructor_id": {"$in": instructor_ids}}, {"_id": 0, "instructor_id": 1, "full_name": 1}).to_list(len(instructor_ids)) if instructor_ids else asyncio.sleep(0, result=[])
+        programs, instructors = await asyncio.gather(programs_task, instructors_task)
+
+        programs_by_id = {p.get("program_id"): p for p in programs if p.get("program_id")}
+        instructors_by_id = {i.get("instructor_id"): i for i in instructors if i.get("instructor_id")}
+
+        for b in sample:
+            session = sessions_by_id.get(b.get("session_id")) or {}
+            pid = b.get("program_id") or session.get("program_id") or ""
+            prog = programs_by_id.get(pid)
+            inst = instructors_by_id.get(session.get("instructor_id") or "")
+            next_3.append({
+                **b,
+                "program_name": prog.get("name") if prog else "Unknown",
+                "instructor_name": inst.get("full_name") if inst else "TBD",
+                "room": session.get("room", "") if session else "",
+            })
 
     return {
         "needs_location": False,
@@ -402,9 +420,18 @@ async def customer_attendance(request: Request, from_date: Optional[str] = None,
     if to_date:
         query["attendance_date_time"]["$lte"] = to_date + "T23:59:59"
     records = await _db.attendance_records.find(query, {"_id": 0}).sort("attendance_date_time", -1).to_list(200)
+    program_ids = list({r.get("program_id") for r in records if r.get("program_id")})
+    programs_by_id = {}
+    if program_ids:
+        programs = await _db.programs.find(
+            {"program_id": {"$in": program_ids}},
+            {"_id": 0, "program_id": 1, "name": 1},
+        ).to_list(len(program_ids))
+        programs_by_id = {p.get("program_id"): p for p in programs if p.get("program_id")}
+
     for r in records:
-        prog = await _db.programs.find_one({"program_id": r.get("program_id", "")}, {"_id": 0, "name": 1})
-        r["program_name"] = prog["name"] if prog else "Unknown"
+        prog = programs_by_id.get(r.get("program_id"))
+        r["program_name"] = prog.get("name") if prog else "Unknown"
     return records
 
 @router.get("/attendance/summary")
@@ -412,20 +439,32 @@ async def customer_attendance_summary(request: Request):
     user = await _require_customer(request)
     lid = _get_active_location(user)
     cid = user["user_id"]
-    total = await _db.attendance_records.count_documents({"customer_id": cid, "location_id": lid, "status": "present"})
+    import asyncio
     month_start = date.today().replace(day=1).isoformat()
-    this_month = await _db.attendance_records.count_documents(
-        {"customer_id": cid, "location_id": lid, "status": "present", "attendance_date_time": {"$gte": month_start}}
+    total, this_month, programs = await asyncio.gather(
+        _db.attendance_records.count_documents({"customer_id": cid, "location_id": lid, "status": "present"}),
+        _db.attendance_records.count_documents(
+            {"customer_id": cid, "location_id": lid, "status": "present", "attendance_date_time": {"$gte": month_start}}
+        ),
+        _db.programs.find({"location_id": lid, "is_active": True}, {"_id": 0, "program_id": 1, "name": 1}).to_list(50),
     )
-    # Per program
-    programs = await _db.programs.find({"location_id": lid, "is_active": True}, {"_id": 0, "program_id": 1, "name": 1}).to_list(50)
+
+    program_ids = [p.get("program_id") for p in programs if p.get("program_id")]
+    counts_by_program = {}
+    if program_ids:
+        agg = await _db.attendance_records.aggregate([
+            {"$match": {"customer_id": cid, "location_id": lid, "status": "present", "program_id": {"$in": program_ids}}},
+            {"$group": {"_id": "$program_id", "count": {"$sum": 1}}},
+        ]).to_list(len(program_ids))
+        counts_by_program = {a.get("_id"): int(a.get("count", 0)) for a in agg if a.get("_id")}
+
     per_program = []
     for p in programs:
-        count = await _db.attendance_records.count_documents(
-            {"customer_id": cid, "location_id": lid, "program_id": p["program_id"], "status": "present"}
-        )
+        pid = p.get("program_id")
+        count = int(counts_by_program.get(pid, 0))
         if count > 0:
-            per_program.append({"program_id": p["program_id"], "name": p["name"], "count": count})
+            per_program.append({"program_id": pid, "name": p.get("name", ""), "count": count})
+
     return {"total_attended": total, "this_month": this_month, "per_program": per_program}
 
 

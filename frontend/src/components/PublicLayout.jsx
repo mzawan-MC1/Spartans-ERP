@@ -25,6 +25,7 @@ export default function PublicLayout({ children, siteSettings }) {
   const location = useLocation();
   const { t, i18n } = useTranslation();
   const lang = i18n?.language || 'en';
+  const isLanding = location.pathname === '/';
 
   // Default nav links (fallback if CMS header_menu is not configured)
   const defaultNavLinks = [
@@ -84,14 +85,14 @@ export default function PublicLayout({ children, siteSettings }) {
     <div className="min-h-screen bg-white flex flex-col">
       {/* Header */}
       <header className="fixed top-0 inset-x-0 z-50">
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 bg-black/70 supports-[backdrop-filter]:bg-black/55 backdrop-blur-xl"
-        />
         <div className="px-3 sm:px-4 lg:px-6">
           <div className="max-w-7xl mx-auto">
-            <div className="relative bg-black/85 supports-[backdrop-filter]:bg-black/75 backdrop-blur-2xl border border-red-500/20 border-b-red-500/45 rounded-2xl rounded-t-none shadow-[0_10px_35px_rgba(0,0,0,0.45)] after:absolute after:inset-x-6 after:bottom-0 after:h-px after:bg-gradient-to-r after:from-transparent after:via-red-500/80 after:to-transparent after:shadow-[0_0_18px_rgba(239,68,68,0.55)]">
-              <div className="flex items-center justify-between h-16 lg:h-20 px-4 sm:px-5 lg:px-6">
+            <div className="relative overflow-hidden border border-red-500/20 border-b-red-500/45 rounded-2xl rounded-t-none shadow-[0_10px_35px_rgba(0,0,0,0.45)] after:absolute after:inset-x-6 after:bottom-0 after:h-px after:bg-gradient-to-r after:from-transparent after:via-red-500/80 after:to-transparent after:shadow-[0_0_18px_rgba(239,68,68,0.55)]">
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 z-0 bg-black/85 supports-[backdrop-filter]:bg-black/75 backdrop-blur-2xl"
+              />
+              <div className="relative z-10 flex items-center justify-between h-16 lg:h-20 px-4 sm:px-5 lg:px-6">
                 {/* Logo */}
                 <Link to="/" className="flex items-center gap-2" data-testid="public-logo">
                   {resolveImage(siteSettings?.logo_url) ? (
@@ -185,7 +186,7 @@ export default function PublicLayout({ children, siteSettings }) {
 
               {/* Mobile Menu */}
               {mobileMenuOpen && (
-                <div className="lg:hidden border-t border-red-500/10 bg-zinc-950/85 supports-[backdrop-filter]:bg-zinc-950/70 backdrop-blur-xl rounded-b-2xl">
+                <div className="relative z-10 lg:hidden border-t border-red-500/10 bg-zinc-950/85 supports-[backdrop-filter]:bg-zinc-950/70 backdrop-blur-xl rounded-b-2xl">
                   <div className="px-4 py-4 space-y-2">
                     {navLinks.map((link, idx) => (
                       (() => {
@@ -266,7 +267,13 @@ export default function PublicLayout({ children, siteSettings }) {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 pt-16 lg:pt-20 [&>*:first-child]:-mt-16 lg:[&>*:first-child]:-mt-20 [&>*:first-child]:pt-16 lg:[&>*:first-child]:pt-20">{children}</main>
+      <main
+        className={`flex-1 pt-16 lg:pt-20 [&>*:first-child]:-mt-16 lg:[&>*:first-child]:-mt-20 ${
+          isLanding ? '[&>*:first-child]:pt-16 lg:[&>*:first-child]:pt-20' : '[&>*:first-child]:pt-24 lg:[&>*:first-child]:pt-28'
+        }`}
+      >
+        {children}
+      </main>
 
       {/* Footer */}
       <footer className="bg-black text-white" data-testid="site-footer">

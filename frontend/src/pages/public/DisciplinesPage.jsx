@@ -106,7 +106,7 @@ export default function DisciplinesPage() {
               {/* Left Column: Article Content */}
               <div className="lg:col-span-8 min-w-0 w-full overflow-hidden">
                 <div 
-                  className="w-full prose prose-lg text-justify break-words whitespace-normal max-w-none discipline-content"
+                  className="w-full prose prose-lg break-words whitespace-normal max-w-none public-richtext discipline-content"
                   dangerouslySetInnerHTML={{ __html: selectedDiscipline.full_description || '' }}
                 />
                 <Link

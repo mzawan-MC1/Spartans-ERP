@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import PublicLayout from '@/components/PublicLayout';
 import { publicAPI } from '@/lib/api';
 import { isVideoUrl, resolveMediaUrl } from '@/lib/media';
-import { MapPin, Phone, Mail, Clock, ChevronRight, ChevronDown, CheckCircle2 } from 'lucide-react';
+import { MapPin, Phone, Mail, Clock, ChevronRight, ChevronDown, CheckCircle2, Star } from 'lucide-react';
 
 // Auto-scrolling gallery row
 function GalleryRow({ images, direction = 'left', speed = 30 }) {
@@ -92,6 +92,7 @@ export default function LocationPage() {
   const [categories, setCategories] = useState([]);
   const [programs, setPrograms] = useState([]);
   const [schedule, setSchedule] = useState([]);
+  const [locationReviews, setLocationReviews] = useState(null);
   const [loading, setLoading] = useState(true);
   const [openFaqIndex, setOpenFaqIndex] = useState(null);
   const [selectedScheduleCategory, setSelectedScheduleCategory] = useState('all');
@@ -103,6 +104,7 @@ export default function LocationPage() {
         setLoading(true);
         setBranch(null);
         setOpenFaqIndex(null);
+        setLocationReviews(null);
         const [settingsRes, branchRes] = await Promise.all([
           publicAPI.getSiteSettings().catch(() => ({ data: null })),
           publicAPI.getBranch(slug).catch(() => ({ data: null }))
@@ -114,11 +116,12 @@ export default function LocationPage() {
           setBranch(branchRes.data);
           const locationId = branchRes.data.location_id;
           
-          const [faqsRes, catRes, progRes, schedRes] = await Promise.all([
+          const [faqsRes, catRes, progRes, schedRes, reviewsRes] = await Promise.all([
             publicAPI.getFaqs(locationId).catch(() => ({ data: [] })),
             publicAPI.getCategories(locationId).catch(() => ({ data: [] })),
             publicAPI.getPrograms(locationId).catch(() => ({ data: [] })),
-            publicAPI.getSchedule(locationId).catch(() => ({ data: [] }))
+            publicAPI.getSchedule(locationId).catch(() => ({ data: [] })),
+            publicAPI.getBranchGoogleReviews(locationId).catch(() => ({ data: null })),
           ]);
           
           setFaqs(faqsRes.data || []);
@@ -126,6 +129,7 @@ export default function LocationPage() {
           setCategories(catRes.data || []);
           setPrograms(progRes.data || []);
           setSchedule(schedRes.data || []);
+          setLocationReviews(reviewsRes.data);
         }
       } catch (err) {
         console.error('Failed to load location data');
@@ -179,20 +183,26 @@ export default function LocationPage() {
           <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/70 to-transparent"></div>
         </div>
         
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 z-10">
-          <div className="max-w-3xl">
+        <div className="relative z-10 w-full px-6 sm:px-8 lg:px-12 xl:px-16">
+          <div className="w-full max-w-[1400px] lg:w-[1080px] px-[50px]">
             <div className="inline-flex items-center gap-2 bg-red-600/20 text-red-500 px-3 py-1 rounded-full text-sm font-medium mb-6 border border-red-500/20">
               <MapPin className="w-4 h-4" />
               <span>{branch.city}, {branch.country}</span>
             </div>
-            <h1 className="font-heading font-extrabold text-4xl sm:text-5xl lg:text-7xl text-white uppercase tracking-tight mb-6 leading-none">
+
+            <h2 className="font-heading font-extrabold text-4xl sm:text-5xl lg:text-[60px] text-white uppercase tracking-[1px] mb-6 leading-none max-w-[1200px]">
               {branch.public_title || branch.name}
-            </h1>
-            <p className="text-lg text-gray-300 mb-8 max-w-2xl font-body leading-relaxed">
+            </h2>
+
+            <p className="text-lg text-gray-300 mb-8 font-body leading-relaxed max-w-[1000px]">
               {branch.public_description || `Welcome to Spartans ${branch.name}. Join our community and transform your life through martial arts and fitness.`}
             </p>
+
             <div className="flex flex-col sm:flex-row gap-4">
-              <Link to={`/join?location=${branch.location_id}`} className="bg-red-600 hover:bg-red-700 text-white px-8 py-4 rounded-sm font-heading font-bold uppercase tracking-wider text-center transition-colors">
+              <Link
+                to={`/join?location=${branch.location_id}`}
+                className="bg-red-600 hover:bg-red-700 text-white px-8 py-4 rounded-sm font-heading font-bold uppercase tracking-wider text-center transition-colors"
+              >
                 Join This Location
               </Link>
             </div>
@@ -200,9 +210,133 @@ export default function LocationPage() {
         </div>
       </section>
 
+      {/* Video Section */}
+      {branch.location_video_path ? (
+        <section className="py-10 lg:py-12 bg-white border-t border-zinc-900">
+          <div className="w-full px-6 sm:px-8 lg:px-12 xl:px-16">
+            <div className="w-full max-w-[1400px] mx-auto">
+              <h2 className="text-center font-heading font-extrabold text-xl sm:text-2xl lg:text-3xl text-black uppercase tracking-[1px] mb-6 leading-tight">
+                {(branch.video_section_title && branch.video_section_title.trim()) ? branch.video_section_title : 'Location Video'}
+              </h2>
+
+              <div className="w-full max-w-4xl mx-auto aspect-video rounded-sm overflow-hidden border border-zinc-800 bg-black">
+                <video
+                  src={resolveMediaUrl(branch.location_video_path)}
+                  poster={branch.location_video_thumbnail_path ? resolveMediaUrl(branch.location_video_thumbnail_path) : undefined}
+                  controls
+                  autoPlay={!!branch.location_video_autoplay}
+                  muted={!!branch.location_video_autoplay}
+                  playsInline
+                  preload="metadata"
+                  className="w-full h-full object-contain"
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+      ) : null}
+
+      {/* Gallery Section */}
+      {gallery.length > 0 && (
+        <section className="py-16 lg:py-24 bg-zinc-950 overflow-hidden">
+          <div className="text-center mb-12 px-4">
+            <h2 className="font-heading font-extrabold text-2xl lg:text-3xl text-white uppercase tracking-tight">
+              Location Gallery
+            </h2>
+            <p className="text-zinc-400 mt-2">Take a look inside {branch.name}</p>
+          </div>
+          
+          <div className="relative flex flex-col gap-3">
+            {/* Row 1 - Moves Left */}
+            <GalleryRow images={gallery} direction="left" />
+            
+            {/* Row 2 - Moves Right (only if we have enough images to justify a second row) */}
+            {gallery.length > 2 && (
+              <GalleryRow images={[...gallery].reverse()} direction="right" />
+            )}
+          </div>
+        </section>
+      )}
+
+      {locationReviews?.enabled ? (
+        <section className="py-16 lg:py-24 bg-white border-t border-gray-100">
+          <div className="mx-auto w-full px-4 sm:px-6 lg:w-[calc(100%-200px)] lg:px-0">
+            <div className="text-center mb-12">
+              <h2 className="font-heading font-extrabold text-2xl lg:text-3xl text-black uppercase tracking-tight">
+                {locationReviews.place_name ? `${locationReviews.place_name} Reviews` : 'Google Reviews'}
+              </h2>
+              <div className="flex items-center justify-center gap-3 mt-4">
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: 5 }).map((_, i) => {
+                    const filled = i < Math.round(locationReviews.rating || 0);
+                    return (
+                      <Star
+                        key={i}
+                        className={`w-5 h-5 ${filled ? 'text-yellow-400' : 'text-gray-300'}`}
+                        fill={filled ? 'currentColor' : 'none'}
+                      />
+                    );
+                  })}
+                </div>
+                <span className="font-bold text-lg text-black">{locationReviews.rating || 0}</span>
+                <span className="text-gray-500 text-sm">({locationReviews.total_reviews || 0} reviews on Google)</span>
+              </div>
+            </div>
+
+            {(locationReviews.reviews || []).length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {locationReviews.reviews.slice(0, 6).map((review, i) => (
+                  <div key={i} className="bg-white border border-gray-200 rounded-sm p-6 shadow-sm">
+                    <div className="flex items-center gap-3 mb-4">
+                      {review.profile_photo_url ? (
+                        <img
+                          src={review.profile_photo_url}
+                          alt={review.author_name || 'Reviewer'}
+                          className="w-10 h-10 rounded-full"
+                          referrerPolicy="no-referrer"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-gray-100" />
+                      )}
+                      <div className="min-w-0">
+                        <p className="font-bold text-gray-900 truncate">{review.author_name || 'Google User'}</p>
+                        <p className="text-gray-500 text-xs">{review.relative_time_description || ''}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1 mb-3">
+                      {Array.from({ length: 5 }).map((_, si) => {
+                        const filled = si < Math.round(review.rating || 0);
+                        return (
+                          <Star
+                            key={si}
+                            className={`w-4 h-4 ${filled ? 'text-yellow-400' : 'text-gray-300'}`}
+                            fill={filled ? 'currentColor' : 'none'}
+                          />
+                        );
+                      })}
+                    </div>
+
+                    {review.text ? (
+                      <p className="text-gray-600 text-sm leading-relaxed line-clamp-6">{review.text}</p>
+                    ) : (
+                      <p className="text-gray-400 text-sm italic">No review text</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center text-gray-500">
+                No reviews available yet.
+              </div>
+            )}
+          </div>
+        </section>
+      ) : null}
+
       {/* Details & Map Section */}
       <section className="py-16 lg:py-24 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto w-full px-4 sm:px-6 lg:w-[calc(100%-200px)] lg:px-0">
           <div className="flex flex-col lg:flex-row gap-12 items-start">
             <div className="lg:w-[30%]">
               <h2 className="font-heading font-extrabold text-2xl lg:text-3xl text-black uppercase tracking-tight mb-8">
@@ -264,7 +398,7 @@ export default function LocationPage() {
                 }
                 
                 if (mapSrc && mapSrc.includes('<iframe')) {
-                  const srcMatch = mapSrc.match(/src=["']([^"']+)["']/);
+                  const srcMatch = mapSrc.match(/src=[\"']([^\"']+)[\"']/);
                   if (srcMatch && srcMatch[1]) {
                     mapSrc = srcMatch[1];
                   }
@@ -297,7 +431,7 @@ export default function LocationPage() {
       {/* Programs Section */}
       {programs.length > 0 && (
         <section className="py-16 lg:py-24 bg-gray-50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto w-full px-4 sm:px-6 lg:w-[calc(100%-200px)] lg:px-0">
             <div className="text-center mb-12">
               <h2 className="font-heading font-extrabold text-2xl lg:text-3xl text-black uppercase tracking-tight">
                 Programs at {branch.name}
@@ -370,12 +504,12 @@ export default function LocationPage() {
       {/* Schedule Section */}
       {schedule.length > 0 && (
         <section className="py-16 lg:py-24 bg-white border-t border-gray-100">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto w-full px-4 sm:px-6 lg:w-[calc(100%-200px)] lg:px-0">
             <div className="text-center mb-12">
               <h2 className="font-heading font-extrabold text-2xl lg:text-3xl text-black uppercase tracking-tight">
                 Class Schedule
               </h2>
-              <p className="text-gray-600 mt-2 max-w-2xl mx-auto">
+              <p className="text-gray-600 mt-2 max-w-5xl mx-auto">
                 Find the perfect time to train. Our schedule is designed to accommodate all levels, from beginners to advanced fighters.
               </p>
             </div>
@@ -508,32 +642,10 @@ export default function LocationPage() {
         </section>
       )}
 
-      {/* Gallery Section */}
-      {gallery.length > 0 && (
-        <section className="py-16 lg:py-24 bg-zinc-950 overflow-hidden">
-          <div className="text-center mb-12 px-4">
-            <h2 className="font-heading font-extrabold text-2xl lg:text-3xl text-white uppercase tracking-tight">
-              Location Gallery
-            </h2>
-            <p className="text-zinc-400 mt-2">Take a look inside {branch.name}</p>
-          </div>
-          
-          <div className="relative flex flex-col gap-3">
-            {/* Row 1 - Moves Left */}
-            <GalleryRow images={gallery} direction="left" />
-            
-            {/* Row 2 - Moves Right (only if we have enough images to justify a second row) */}
-            {gallery.length > 2 && (
-              <GalleryRow images={[...gallery].reverse()} direction="right" />
-            )}
-          </div>
-        </section>
-      )}
-
       {/* FAQs Section */}
       {faqs.length > 0 && (
         <section className="py-16 lg:py-24 bg-white">
-          <div className="w-[80%] mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto w-full px-4 sm:px-6 lg:w-[calc(100%-200px)] lg:px-0">
             <div className="text-center mb-12">
               <h2 className="font-heading font-extrabold text-2xl lg:text-3xl text-black uppercase tracking-tight">
                 Location FAQs

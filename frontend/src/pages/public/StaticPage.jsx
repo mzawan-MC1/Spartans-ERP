@@ -101,7 +101,7 @@ export default function StaticPage() {
       <section data-testid="static-page-content" className="py-16 lg:py-24 overflow-hidden bg-white">
         <div className="w-[85%] max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div 
-            className="prose prose-lg max-w-none prose-headings:font-heading prose-headings:text-black prose-p:text-black prose-li:text-black prose-strong:text-black prose-a:text-red-600 text-black text-justify break-words whitespace-normal static-page-content"
+            className="prose prose-lg max-w-none prose-headings:font-heading prose-headings:text-black prose-p:text-black prose-li:text-black prose-strong:text-black prose-a:text-red-600 text-black break-words whitespace-normal public-richtext static-page-content"
             dangerouslySetInnerHTML={{ __html: formatContent(page.content) }}
           />
         </div>

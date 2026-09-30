@@ -1,18 +1,23 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ManagerLayout from '@/components/ManagerLayout';
-import { cmsAPI, publicAPI } from '@/lib/api';
+import { cmsAPI, locationAPI } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
-import { Settings, Save, MapPin, Image as ImageIcon, MessageSquare, Plus, Trash2, GripVertical, HelpCircle, Pencil } from 'lucide-react';
+import { Settings, Save, MapPin, Image as ImageIcon, FileVideo, Plus, Trash2, GripVertical, HelpCircle, Pencil, Star } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import FileUpload from '@/components/FileUpload';
+import LanguageTabs from '@/components/cms/LanguageTabs';
+import { CMS_LANGS } from '@/lib/cmsLanguages';
 
 export default function LocationSettingsPage() {
   const [activeTab, setActiveTab] = useState('general');
+  const [generalLang, setGeneralLang] = useState('en');
+  const [videoLang, setVideoLang] = useState('en');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [location, setLocation] = useState(null);
@@ -20,7 +25,8 @@ export default function LocationSettingsPage() {
   // FAQs
   const [faqs, setFaqs] = useState([]);
   const [faqDialog, setFaqDialog] = useState({ open: false, data: null });
-  const [faqForm, setFaqForm] = useState({ question: '', answer: '', category: 'General', sort_order: 0, is_featured: false });
+  const [faqLang, setFaqLang] = useState('en');
+  const [faqForm, setFaqForm] = useState({ question: '', answer: '', translations: { ar: { question: '', answer: '' }, fr: { question: '', answer: '' }, ru: { question: '', answer: '' } }, category: 'General', sort_order: 0, is_featured: false });
 
   // Gallery
   const [gallery, setGallery] = useState([]);
@@ -37,7 +43,7 @@ export default function LocationSettingsPage() {
       const user = JSON.parse(userStr);
       
       const [locRes, faqsRes] = await Promise.all([
-        publicAPI.getBranch(user.location_id).catch(() => ({ data: null })),
+        locationAPI.get(user.location_id).catch(() => ({ data: null })),
         cmsAPI.listLocationFaqs(user.location_id, true).catch(() => ({ data: [] }))
       ]);
 
@@ -57,12 +63,30 @@ export default function LocationSettingsPage() {
   const handleSaveGeneral = async () => {
     try {
       setSaving(true);
+      const translations = {};
+      for (const l of CMS_LANGS) {
+        if (l.code === 'en') continue;
+        const t = location?.translations?.[l.code] || {};
+        translations[l.code] = {
+          public_title: t.public_title ?? '',
+          public_description: t.public_description ?? '',
+          video_section_title: t.video_section_title ?? '',
+        };
+      }
       
       // Save General info (title, desc, map)
       await cmsAPI.updateBranchPublic(location.location_id, {
         public_title: location.public_title,
         public_description: location.public_description,
-        map_embed_url: location.map_embed_url
+        video_section_title: location.video_section_title,
+        map_embed_url: location.map_embed_url,
+        location_video_path: location.location_video_path,
+        location_video_thumbnail_path: location.location_video_thumbnail_path,
+        location_video_autoplay: location.location_video_autoplay,
+        google_place_id: location.google_place_id,
+        google_location_name: location.google_location_name,
+        google_reviews_enabled: location.google_reviews_enabled,
+        translations,
       });
       
       // Save Gallery separately since it uses ownerAPI under the hood for some legacy compat,
@@ -161,6 +185,8 @@ export default function LocationSettingsPage() {
         <div className="flex border-b border-zinc-800 mb-6">
           {[
             { id: 'general', label: 'General Info', icon: Settings },
+            { id: 'video', label: 'Video', icon: FileVideo },
+            { id: 'reviews', label: 'Reviews', icon: Star },
             { id: 'gallery', label: 'Gallery', icon: ImageIcon },
             { id: 'faqs', label: 'FAQs', icon: HelpCircle },
           ].map(tab => (
@@ -187,10 +213,35 @@ export default function LocationSettingsPage() {
               
               <div className="space-y-4">
                 <div>
-                  <Label>Public Title</Label>
+                  <div className="flex items-center justify-between gap-4">
+                    <Label>Public Title</Label>
+                    <LanguageTabs
+                      value={generalLang}
+                      onValueChange={setGeneralLang}
+                      statusByLang={CMS_LANGS.reduce((acc, l) => {
+                        const title = l.code === 'en' ? (location?.public_title || '') : (location?.translations?.[l.code]?.public_title || '');
+                        const desc = l.code === 'en' ? (location?.public_description || '') : (location?.translations?.[l.code]?.public_description || '');
+                        const titleOk = typeof title === 'string' && title.trim().length > 0;
+                        const descOk = typeof desc === 'string' && desc.trim().length > 0;
+                        if (!titleOk && !descOk) return acc;
+                        acc[l.code] = titleOk && descOk ? 'complete' : 'incomplete';
+                        return acc;
+                      }, {})}
+                    />
+                  </div>
                   <Input 
-                    value={location.public_title || ''} 
-                    onChange={e => setLocation({...location, public_title: e.target.value})}
+                    dir={generalLang === 'ar' ? 'rtl' : 'ltr'}
+                    value={generalLang === 'en' ? (location.public_title || '') : (location.translations?.[generalLang]?.public_title || '')}
+                    onChange={e => {
+                      const v = e.target.value;
+                      if (generalLang === 'en') {
+                        setLocation({ ...location, public_title: v });
+                        return;
+                      }
+                      const merged = { ...(location.translations || {}) };
+                      merged[generalLang] = { ...(merged[generalLang] || {}), public_title: v };
+                      setLocation({ ...location, translations: merged });
+                    }}
                     placeholder="e.g. Spartans Martial Arts Sharjah"
                     className="mt-1"
                   />
@@ -199,8 +250,18 @@ export default function LocationSettingsPage() {
                 <div>
                   <Label>Public Description</Label>
                   <Textarea 
-                    value={location.public_description || ''} 
-                    onChange={e => setLocation({...location, public_description: e.target.value})}
+                    dir={generalLang === 'ar' ? 'rtl' : 'ltr'}
+                    value={generalLang === 'en' ? (location.public_description || '') : (location.translations?.[generalLang]?.public_description || '')}
+                    onChange={e => {
+                      const v = e.target.value;
+                      if (generalLang === 'en') {
+                        setLocation({ ...location, public_description: v });
+                        return;
+                      }
+                      const merged = { ...(location.translations || {}) };
+                      merged[generalLang] = { ...(merged[generalLang] || {}), public_description: v };
+                      setLocation({ ...location, translations: merged });
+                    }}
                     placeholder="Brief description of this location for the public page"
                     className="mt-1 h-32"
                   />
@@ -216,6 +277,115 @@ export default function LocationSettingsPage() {
                   />
                   <p className="text-xs text-zinc-500 mt-1">Go to Google Maps -&gt; Share -&gt; Embed a map -&gt; Copy the src URL inside the iframe tag.</p>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'video' && location && (
+            <div className="bg-zinc-900 border border-zinc-800 rounded-sm p-6 space-y-6">
+              <h2 className="text-lg font-medium text-white mb-4">Location Video</h2>
+
+              <div>
+                <div className="flex items-center justify-between gap-4">
+                  <Label>Section Title</Label>
+                  <LanguageTabs
+                    value={videoLang}
+                    onValueChange={setVideoLang}
+                    statusByLang={CMS_LANGS.reduce((acc, l) => {
+                      const title = l.code === 'en' ? (location?.video_section_title || '') : (location?.translations?.[l.code]?.video_section_title || '');
+                      const ok = typeof title === 'string' && title.trim().length > 0;
+                      if (!ok) return acc;
+                      acc[l.code] = 'complete';
+                      return acc;
+                    }, {})}
+                  />
+                </div>
+                <Input
+                  dir={videoLang === 'ar' ? 'rtl' : 'ltr'}
+                  value={videoLang === 'en' ? (location.video_section_title || '') : (location.translations?.[videoLang]?.video_section_title || '')}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    if (videoLang === 'en') {
+                      setLocation({ ...location, video_section_title: v });
+                      return;
+                    }
+                    const merged = { ...(location.translations || {}) };
+                    merged[videoLang] = { ...(merged[videoLang] || {}), video_section_title: v };
+                    setLocation({ ...location, translations: merged });
+                  }}
+                  className="mt-1"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div>
+                  <Label>Video File (Max 10MB)</Label>
+                  <FileUpload
+                    value={location.location_video_path || ''}
+                    onChange={(v) => setLocation({ ...location, location_video_path: v })}
+                    accept="video/*"
+                    maxSize={10}
+                    className="mt-2"
+                  />
+                </div>
+                <div>
+                  <Label>Video Thumbnail</Label>
+                  <FileUpload
+                    value={location.location_video_thumbnail_path || ''}
+                    onChange={(v) => setLocation({ ...location, location_video_thumbnail_path: v })}
+                    accept="image/*"
+                    maxSize={10}
+                    className="mt-2"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between gap-4 rounded-sm border border-zinc-800 p-4">
+                <div>
+                  <p className="text-white font-medium">Auto-play</p>
+                  <p className="text-zinc-400 text-sm">If enabled, video auto-plays muted.</p>
+                </div>
+                <Switch
+                  checked={!!location.location_video_autoplay}
+                  onCheckedChange={(checked) => setLocation({ ...location, location_video_autoplay: checked })}
+                />
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'reviews' && location && (
+            <div className="bg-zinc-900 border border-zinc-800 rounded-sm p-6 space-y-6">
+              <h2 className="text-lg font-medium text-white mb-4">Google Reviews Integration</h2>
+
+              <div className="flex items-center justify-between gap-4 rounded-sm border border-zinc-800 p-4">
+                <div>
+                  <p className="text-white font-medium">Enable Reviews</p>
+                  <p className="text-zinc-400 text-sm">Shows Google reviews on this location’s public page.</p>
+                </div>
+                <Switch
+                  checked={!!location.google_reviews_enabled}
+                  onCheckedChange={(checked) => setLocation({ ...location, google_reviews_enabled: checked })}
+                />
+              </div>
+
+              <div>
+                <Label>Google Place ID</Label>
+                <Input
+                  value={location.google_place_id || ''}
+                  onChange={(e) => setLocation({ ...location, google_place_id: e.target.value })}
+                  placeholder="ChIJ..."
+                  className="mt-1"
+                />
+              </div>
+
+              <div>
+                <Label>Google Business/Location Name</Label>
+                <Input
+                  value={location.google_location_name || ''}
+                  onChange={(e) => setLocation({ ...location, google_location_name: e.target.value })}
+                  placeholder="Spartans - Sharjah (Maliha)"
+                  className="mt-1"
+                />
               </div>
             </div>
           )}
@@ -278,7 +448,11 @@ export default function LocationSettingsPage() {
                   <h2 className="text-lg font-medium text-white">Location FAQs</h2>
                   <p className="text-zinc-400 text-sm">Manage frequently asked questions specific to this location.</p>
                 </div>
-                <Button onClick={() => setFaqDialog({ open: true, data: null })} size="sm" className="bg-red-600 hover:bg-red-700">
+                <Button onClick={() => {
+                  setFaqLang('en');
+                  setFaqForm({ question: '', answer: '', translations: { ar: { question: '', answer: '' }, fr: { question: '', answer: '' }, ru: { question: '', answer: '' } }, category: 'General', sort_order: 0, is_featured: false });
+                  setFaqDialog({ open: true, data: null });
+                }} size="sm" className="bg-red-600 hover:bg-red-700">
                   <Plus className="w-4 h-4 mr-2" /> Add FAQ
                 </Button>
               </div>
@@ -298,8 +472,15 @@ export default function LocationSettingsPage() {
                     </div>
                     <div className="flex items-center gap-2 ml-4">
                       <button onClick={() => {
+                        setFaqLang('en');
+                        const baseTranslations = { ar: { question: '', answer: '' }, fr: { question: '', answer: '' }, ru: { question: '', answer: '' } };
                         setFaqForm({
-                          question: f.question, answer: f.answer, category: f.category, sort_order: f.sort_order, is_featured: f.is_featured
+                          question: f.question,
+                          answer: f.answer,
+                          translations: { ...baseTranslations, ...(f.translations || {}) },
+                          category: f.category,
+                          sort_order: f.sort_order,
+                          is_featured: f.is_featured
                         });
                         setFaqDialog({ open: true, data: f });
                       }} className="text-zinc-400 hover:text-white p-1">
@@ -330,12 +511,55 @@ export default function LocationSettingsPage() {
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div>
-              <Label>Question</Label>
-              <Input value={faqForm.question} onChange={e => setFaqForm({...faqForm, question: e.target.value})} className="mt-1" />
+              <div className="flex items-center justify-between gap-4">
+                <Label>Question</Label>
+                <LanguageTabs
+                  value={faqLang}
+                  onValueChange={setFaqLang}
+                  statusByLang={CMS_LANGS.reduce((acc, l) => {
+                    const q = l.code === 'en' ? (faqForm?.question || '') : (faqForm?.translations?.[l.code]?.question || '');
+                    const a = l.code === 'en' ? (faqForm?.answer || '') : (faqForm?.translations?.[l.code]?.answer || '');
+                    const qOk = typeof q === 'string' && q.trim().length > 0;
+                    const aOk = typeof a === 'string' && a.trim().length > 0;
+                    if (!qOk && !aOk) return acc;
+                    acc[l.code] = qOk && aOk ? 'complete' : 'incomplete';
+                    return acc;
+                  }, {})}
+                />
+              </div>
+              <Input
+                dir={faqLang === 'ar' ? 'rtl' : 'ltr'}
+                value={faqLang === 'en' ? faqForm.question : (faqForm.translations?.[faqLang]?.question || '')}
+                onChange={e => {
+                  const v = e.target.value;
+                  if (faqLang === 'en') {
+                    setFaqForm({ ...faqForm, question: v });
+                    return;
+                  }
+                  const merged = { ...(faqForm.translations || {}) };
+                  merged[faqLang] = { ...(merged[faqLang] || {}), question: v };
+                  setFaqForm({ ...faqForm, translations: merged });
+                }}
+                className="mt-1"
+              />
             </div>
             <div>
               <Label>Answer</Label>
-              <Textarea value={faqForm.answer} onChange={e => setFaqForm({...faqForm, answer: e.target.value})} className="mt-1 h-32" />
+              <Textarea
+                dir={faqLang === 'ar' ? 'rtl' : 'ltr'}
+                value={faqLang === 'en' ? faqForm.answer : (faqForm.translations?.[faqLang]?.answer || '')}
+                onChange={e => {
+                  const v = e.target.value;
+                  if (faqLang === 'en') {
+                    setFaqForm({ ...faqForm, answer: v });
+                    return;
+                  }
+                  const merged = { ...(faqForm.translations || {}) };
+                  merged[faqLang] = { ...(merged[faqLang] || {}), answer: v };
+                  setFaqForm({ ...faqForm, translations: merged });
+                }}
+                className="mt-1 h-32"
+              />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
